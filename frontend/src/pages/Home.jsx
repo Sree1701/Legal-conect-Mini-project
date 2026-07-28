@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import "./Home.css";
 import { Link } from "react-router-dom";
 
@@ -158,25 +159,7 @@ function Home() {
 
       {/* FOOTER */}
 
-      <footer>
-
-        <h2>LegalConnect</h2>
-
-        <p>
-          A Web-Based Legal Assistance & Case Management Portal
-        </p>
-
-        <hr />
-
-        <p>
-          © 2026 LegalConnect. All Rights Reserved.
-        </p>
-
-        <p>
-          Developed as an MCA Mini Project
-        </p>
-
-      </footer>
+      <Footer />
 
     </>
   );

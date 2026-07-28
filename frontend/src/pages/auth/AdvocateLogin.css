@@ -1,153 +1,82 @@
-.advocate-login-container{
+/* ==========================================
+   ADVOCATE PORTAL SPECIFIC STYLES
+========================================== */
 
-    min-height:100vh;
+@import "./Login.css";
 
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    background:#eef3fb;
-
+.advocate-bg {
+  background: linear-gradient(135deg, rgba(11, 79, 117, 0.08) 0%, rgba(255, 213, 79, 0.08) 100%), #f4f8fc;
 }
 
-.advocate-login-card{
-
-    width:420px;
-
-    background:white;
-
-    padding:40px;
-
-    border-radius:15px;
-
-    box-shadow:0 10px 25px rgba(0,0,0,.15);
-
+.advocate-card {
+  border-top: 5px solid #FFD54F;
+  border-left: 1px solid rgba(11, 79, 117, 0.1);
+  border-right: 1px solid rgba(11, 79, 117, 0.1);
 }
 
-.advocate-login-card h1{
-
-    text-align:center;
-
-    color:#0d47a1;
-
-    margin-bottom:10px;
-
+.advocate-badge {
+  display: inline-block;
+  background: #FFD54F;
+  color: #0B4F75;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  box-shadow: 0 3px 8px rgba(255, 213, 79, 0.3);
 }
 
-.advocate-login-card h2{
-
-    text-align:center;
-
-    color:#333;
-
+.advocate-benefits-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.subtitle{
-
-    text-align:center;
-
-    color:#666;
-
-    margin:15px 0 30px;
-
+.benefit-item {
+  font-size: 13px;
+  color: #334155;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.input-group{
-
-    display:flex;
-
-    flex-direction:column;
-
-    margin-bottom:20px;
-
+.benefit-icon {
+  color: #0B4F75;
+  font-size: 14px;
 }
 
-.input-group label{
-
-    margin-bottom:8px;
-
-    font-weight:600;
-
+.advocate-btn-primary {
+  background: #0B4F75;
+  color: #ffffff;
 }
 
-.input-group input{
-
-    padding:12px;
-
-    border:1px solid #ccc;
-
-    border-radius:8px;
-
-    font-size:16px;
-
+.advocate-btn-primary:hover:not(:disabled) {
+  background: #083B59;
 }
 
-.input-group input:focus{
-
-    border:2px solid #0d47a1;
-
-    outline:none;
-
+.user-portal-link {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  background: #ffffff;
 }
 
-.login-btn{
-
-    width:100%;
-
-    padding:14px;
-
-    border:none;
-
-    border-radius:8px;
-
-    background:#0d47a1;
-
-    color:white;
-
-    font-size:17px;
-
-}
-
-.login-btn:hover{
-
-    background:#08306b;
-
-}
-
-.links{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    margin-top:20px;
-
-}
-
-.links a{
-
-    color:#0d47a1;
-
-    text-decoration:none;
-
-    font-size:14px;
-
-}
-
-.back-home{
-
-    text-align:center;
-
-    margin-top:25px;
-
-}
-
-.back-home a{
-
-    color:#0d47a1;
-
-    text-decoration:none;
-
+.user-portal-link:hover {
+  background: #f1f5f9;
+  color: #0B4F75;
+  border-color: #0B4F75;
 }

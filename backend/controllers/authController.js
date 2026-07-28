@@ -6,13 +6,13 @@ exports.register = async (req, res) => {
 
     try {
 
-        const { name, email, password, role } = req.body;
+        const { name, email, phone, password, role } = req.body;
 
         const userExists = await User.findOne({ email });
 
         if (userExists) {
             return res.status(400).json({
-                message: "User already exists"
+                message: "User already exists with this email"
             });
         }
 
@@ -24,9 +24,11 @@ exports.register = async (req, res) => {
 
             email,
 
+            phone,
+
             password: hashedPassword,
 
-            role
+            role: role || "client"
 
         });
 

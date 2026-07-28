@@ -1,0 +1,39 @@
+/* ==========================================
+   LEGALCONNECT FOOTER
+========================================== */
+
+.footer {
+  background: #083B59;
+  color: white;
+  text-align: center;
+  padding: 45px 20px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.footer h2 {
+  margin-bottom: 12px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffffff;
+}
+
+.footer p {
+  margin: 10px 0;
+  color: #D9ECFF;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.footer hr {
+  width: 250px;
+  margin: 22px auto;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-subtext {
+  font-size: 13px;
+  color: #94a3b8;
+}
