@@ -8,6 +8,11 @@ const complaintSchema = new mongoose.Schema(
         required: true
     },
 
+    advocate: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+
     title: {
         type: String,
         required: true
@@ -31,6 +36,18 @@ const complaintSchema = new mongoose.Schema(
         ],
         default: "Other"
     },
+
+    documents: [
+        {
+            name: String,
+            url: String,
+            size: String,
+            uploadedAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ],
 
     status: {
         type: String,

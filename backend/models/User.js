@@ -26,6 +26,21 @@ const userSchema = new mongoose.Schema(
         type: String,
         enum: ["client", "advocate", "admin"],
         default: "client"
+    },
+
+    specialization: {
+        type: String,
+        default: "General Practice"
+    },
+
+    experience: {
+        type: String,
+        default: "5+ Years"
+    },
+
+    bio: {
+        type: String,
+        default: "Legal Professional registered on LegalConnect."
     }
 
 },
