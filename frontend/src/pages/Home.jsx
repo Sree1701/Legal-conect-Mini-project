@@ -3,70 +3,183 @@ import "./Home.css";
 import { Link } from "react-router-dom";
 
 function Home() {
-    return (
-        <>
-            <Navbar />
+  return (
+    <>
+      <Navbar />
 
-            <section className="hero">
+      {/* HERO SECTION */}
 
-                <h1>Legal Assistance Made Simple</h1>
+      <section className="hero">
 
-                <p>
-                    Connect with verified advocates, upload legal
-                    documents, book consultations, track case progress,
-                    and receive legal guidance from one secure platform.
-                </p>
+        <div className="overlay">
 
-                <div className="buttons">
+          <h1>LegalConnect</h1>
 
-                    <Link to="/register">
-                        <button className="primary">
-                            Get Started
-                        </button>
-                    </Link>
+          <h2>
+            A Web-Based Legal Assistance &
+            <br />
+            Case Management Portal
+          </h2>
 
-                    <Link to="/login">
-                        <button className="secondary">
-                            Advocate Login
-                        </button>
-                    </Link>
+          <p>
+            LegalConnect is a secure online platform that connects citizens
+            with verified advocates. Users can book legal consultations,
+            upload documents, track case progress, receive notifications,
+            and access AI-assisted legal guidance—all in one place.
+          </p>
 
-                </div>
+          <div className="buttons">
 
-            </section>
+            <Link to="/register">
+              <button className="primary">
+                Get Started
+              </button>
+            </Link>
 
-            <section className="features">
+            <Link to="/login">
+              <button className="secondary">
+                User Login
+              </button>
+            </Link>
 
-                <div className="card">
-                    <h3>👨‍⚖️ Verified Advocates</h3>
-                    <p>Find trusted legal professionals.</p>
-                </div>
+            <Link to="/advocate-login">
+              <button className="secondary">
+                Advocate Portal
+              </button>
+            </Link>
 
-                <div className="card">
-                    <h3>📄 Secure Documents</h3>
-                    <p>Upload and manage legal documents safely.</p>
-                </div>
+          </div>
 
-                <div className="card">
-                    <h3>🤖 AI Assistance</h3>
-                    <p>Get legal guidance before consultation.</p>
-                </div>
+        </div>
 
-                <div className="card">
-                    <h3>📅 Online Booking</h3>
-                    <p>Book appointments in just a few clicks.</p>
-                </div>
+      </section>
 
-            </section>
+      {/* FEATURES */}
 
-            <footer>
+      <section className="features">
 
-                © 2026 LegalConnect | MCA Mini Project
+        <h2>Our Services</h2>
 
-            </footer>
+        <div className="feature-grid">
 
-        </>
-    );
+          <div className="card">
+            <h3>👨‍⚖ Verified Advocates</h3>
+            <p>
+              Connect with trusted and verified legal professionals based on
+              specialization and availability.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>📅 Appointment Booking</h3>
+            <p>
+              Book online consultations with advocates quickly and securely.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>📂 Case Management</h3>
+            <p>
+              Track every stage of your legal complaint and case from a
+              centralized dashboard.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>📄 Secure Document Upload</h3>
+            <p>
+              Store and access important legal documents safely anytime.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>🤖 AI Legal Assistance</h3>
+            <p>
+              Get preliminary legal guidance before consulting an advocate.
+            </p>
+          </div>
+
+          <div className="card">
+            <h3>🔔 Notifications</h3>
+            <p>
+              Stay informed with instant updates about appointments and case
+              progress.
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* WHY CHOOSE US */}
+
+      <section className="about">
+
+        <h2>Why Choose LegalConnect?</h2>
+
+        <div className="about-content">
+
+          <div>
+
+            <h3>✔ Trusted Legal Platform</h3>
+
+            <p>
+              All advocates are verified before joining the platform,
+              ensuring trustworthy legal assistance.
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3>✔ Secure Digital Records</h3>
+
+            <p>
+              Your legal documents and complaint details are stored securely
+              and accessible whenever you need them.
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3>✔ Fast Case Updates</h3>
+
+            <p>
+              Receive notifications regarding appointments, complaints,
+              advocate responses, and case status.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* FOOTER */}
+
+      <footer>
+
+        <h2>LegalConnect</h2>
+
+        <p>
+          A Web-Based Legal Assistance & Case Management Portal
+        </p>
+
+        <hr />
+
+        <p>
+          © 2026 LegalConnect. All Rights Reserved.
+        </p>
+
+        <p>
+          Developed as an MCA Mini Project
+        </p>
+
+      </footer>
+
+    </>
+  );
 }
 
 export default Home;

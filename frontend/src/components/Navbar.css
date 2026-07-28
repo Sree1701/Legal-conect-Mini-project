@@ -1,0 +1,210 @@
+/* ===========================
+   LEGALCONNECT NAVBAR
+=========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+.navbar{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:15px 60px;
+
+    background:#0B4F75;
+
+    box-shadow:0 3px 15px rgba(0,0,0,.15);
+
+    position:sticky;
+
+    top:0;
+
+    z-index:1000;
+
+}
+
+/* ===========================
+   LOGO
+=========================== */
+
+.logo-section{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.logo-image{
+
+    width:70px;
+
+    height:70px;
+
+    object-fit:contain;
+
+    border-radius:50%;
+
+    background:white;
+
+    padding:5px;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.15);
+
+}
+
+.logo-text{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.logo-text h2{
+
+    color:white;
+
+    font-size:30px;
+
+    letter-spacing:1px;
+
+    font-weight:700;
+
+}
+
+.logo-text p{
+
+    color:#D9ECFF;
+
+    font-size:13px;
+
+    line-height:18px;
+
+}
+
+/* ===========================
+   NAVIGATION
+=========================== */
+
+.nav-links{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:25px;
+
+}
+
+.nav-links a{
+
+    color:white;
+
+    text-decoration:none;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.nav-links a:hover{
+
+    color:#FFD54F;
+
+}
+
+/* ===========================
+   ADVOCATE BUTTON
+=========================== */
+
+.advocate-btn{
+
+    background:#FFD54F;
+
+    color:#0B4F75 !important;
+
+    padding:10px 18px;
+
+    border-radius:8px;
+
+    transition:.3s;
+
+}
+
+.advocate-btn:hover{
+
+    background:white !important;
+
+    color:#0B4F75 !important;
+
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:900px){
+
+.navbar{
+
+flex-direction:column;
+
+padding:20px;
+
+}
+
+.logo-section{
+
+margin-bottom:20px;
+
+}
+
+.nav-links{
+
+flex-wrap:wrap;
+
+justify-content:center;
+
+gap:15px;
+
+}
+
+.logo-text h2{
+
+font-size:24px;
+
+text-align:center;
+
+}
+
+.logo-text p{
+
+text-align:center;
+
+}
+
+.logo-image{
+
+width:60px;
+
+height:60px;
+
+}
+
+}
