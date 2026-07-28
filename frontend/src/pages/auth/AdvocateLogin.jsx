@@ -1,18 +1,18 @@
 import { Link } from "react-router-dom";
-import "./Login.css";
+import "./AdvocateLogin.css";
 
-function Login() {
+function AdvocateLogin() {
   return (
-    <div className="login-container">
+    <div className="advocate-login-container">
 
-      <div className="login-card">
+      <div className="advocate-login-card">
 
         <h1>⚖ LegalConnect</h1>
 
-        <h2>User Login</h2>
+        <h2>Advocate Login</h2>
 
         <p className="subtitle">
-          Welcome back! Login to access your legal services.
+          Login to manage your appointments and client cases.
         </p>
 
         <form>
@@ -48,24 +48,14 @@ function Login() {
         <div className="links">
 
           <Link to="/register">
-            Create Account
+            Register as Advocate
           </Link>
 
-          <Link to="/otp">
-            Login with OTP
+          <Link to="/forgot-password">
+            Forgot Password?
           </Link>
 
         </div>
-
-        <div className="divider">
-          OR
-        </div>
-
-        <Link to="/advocate-login">
-          <button className="secondary-btn">
-            Advocate Login
-          </button>
-        </Link>
 
         <p className="back-home">
           <Link to="/">← Back to Home</Link>
@@ -77,4 +67,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default AdvocateLogin;

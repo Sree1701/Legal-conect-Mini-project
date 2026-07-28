@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import AdvocateLogin from "./pages/auth/AdvocateLogin";
+
 import Home from "./pages/Home";
 
 import Login from "./pages/auth/Login";
@@ -35,6 +37,8 @@ function App() {
         <Route path="/advocate" element={<AdvocateDashboard />} />
 
         <Route path="/admin" element={<AdminDashboard />} />
+
+        <Route path="/advocate-login" element={<AdvocateLogin />} />
 
       </Routes>
 
