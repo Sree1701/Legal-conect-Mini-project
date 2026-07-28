@@ -1,33 +1,70 @@
+import { Link } from "react-router-dom";
+import "./Register.css";
+
 function Register() {
+  return (
+    <div className="register-container">
 
-    return (
+      <div className="register-card">
 
-        <div style={{textAlign:"center",marginTop:"100px"}}>
+        <h1>⚖ LegalConnect</h1>
+        <h2>Create Your Account</h2>
 
-            <h2>User Registration</h2>
+        <form>
 
-            <input placeholder="Name"/>
+          <div className="input-group">
+            <label>Full Name</label>
+            <input type="text" placeholder="Enter your full name" />
+          </div>
 
-            <br/><br/>
+          <div className="input-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="Enter your email" />
+          </div>
 
-            <input placeholder="Email"/>
+          <div className="input-group">
+            <label>Phone Number</label>
+            <input type="text" placeholder="Enter your phone number" />
+          </div>
 
-            <br/><br/>
+          <div className="input-group">
+            <label>Register As</label>
 
-            <input placeholder="Phone"/>
+            <select>
+              <option>Client</option>
+              <option>Advocate</option>
+            </select>
 
-            <br/><br/>
+          </div>
 
-            <input type="password" placeholder="Password"/>
+          <div className="input-group">
+            <label>Password</label>
+            <input type="password" placeholder="Enter password" />
+          </div>
 
-            <br/><br/>
+          <div className="input-group">
+            <label>Confirm Password</label>
+            <input
+              type="password"
+              placeholder="Confirm password"
+            />
+          </div>
 
-            <button>Register</button>
+          <button className="register-btn">
+            Create Account
+          </button>
 
-        </div>
+        </form>
 
-    );
+        <p className="login-link">
+          Already have an account?
+          <Link to="/login"> Login</Link>
+        </p>
 
+      </div>
+
+    </div>
+  );
 }
 
 export default Register;
