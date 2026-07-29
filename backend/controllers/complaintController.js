@@ -16,8 +16,8 @@ exports.createComplaint = async (req, res) => {
         });
 
         const populated = await Complaint.findById(complaint._id)
-            .populate("user", "name email phone")
-            .populate("advocate", "name email phone specialization experience");
+            .populate("user", "fullName email phone")
+            .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus");
 
         res.status(201).json({
             success: true,
@@ -36,8 +36,8 @@ exports.createComplaint = async (req, res) => {
 exports.getAllComplaints = async (req, res) => {
     try {
         const complaints = await Complaint.find()
-            .populate("user", "name email phone")
-            .populate("advocate", "name email phone specialization experience")
+            .populate("user", "fullName email phone")
+            .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus")
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -58,7 +58,7 @@ exports.getComplaintsByClient = async (req, res) => {
     try {
         const { clientId } = req.params;
         const complaints = await Complaint.find({ user: clientId })
-            .populate("advocate", "name email phone specialization experience")
+            .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus")
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -79,7 +79,7 @@ exports.getComplaintsByAdvocate = async (req, res) => {
     try {
         const { advocateId } = req.params;
         const complaints = await Complaint.find({ advocate: advocateId })
-            .populate("user", "name email phone")
+            .populate("user", "fullName email phone")
             .sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -99,8 +99,8 @@ exports.getComplaintsByAdvocate = async (req, res) => {
 exports.getComplaintById = async (req, res) => {
     try {
         const complaint = await Complaint.findById(req.params.id)
-            .populate("user", "name email phone")
-            .populate("advocate", "name email phone specialization experience");
+            .populate("user", "fullName email phone")
+            .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus");
 
         if (!complaint) {
             return res.status(404).json({
@@ -166,8 +166,8 @@ exports.updateComplaint = async (req, res) => {
             req.body,
             { new: true }
         )
-            .populate("user", "name email phone")
-            .populate("advocate", "name email phone specialization experience");
+            .populate("user", "fullName email phone")
+            .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus");
 
         res.status(200).json({
             success: true,

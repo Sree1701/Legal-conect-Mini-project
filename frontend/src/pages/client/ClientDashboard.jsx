@@ -188,7 +188,7 @@ function ClientDashboard() {
       {/* HEADER NAVBAR */}
       <header className="dashboard-header">
         <div className="header-brand">
-          <span className="brand-logo">⚖</span>
+          <img src="/logo.png" alt="LegalConnect Logo" className="client-dashboard-logo-image" />
           <div>
             <h2>LegalConnect</h2>
             <p>Client Portal Dashboard</p>
@@ -306,14 +306,26 @@ function ClientDashboard() {
                       <p className="advocate-bio">{adv.bio || "Experienced advocate dedicated to handling legal matters with transparency and expertise."}</p>
                       <div className="advocate-details">
                         <div>
-                          <strong>Experience:</strong> {adv.experience || "5+ Years"}
+                          <strong>Bar Council ID:</strong> <span className="bar-id-pill">📜 {adv.barCouncilId || "N/A"}</span>
                         </div>
                         <div>
-                          <strong>Email:</strong> {adv.email}
+                          <strong>Enrollment Year:</strong> 📅 {adv.enrollmentYear || "N/A"}
+                        </div>
+                        <div>
+                          <strong>Years of Experience:</strong> <strong style={{color: '#047857'}}>🎖 {adv.experience !== undefined ? adv.experience : (adv.enrollmentYear ? Math.max(0, new Date().getFullYear() - adv.enrollmentYear) : 0)} Years</strong>
+                        </div>
+                        <div>
+                          <strong>Verification Status:</strong>{" "}
+                          <span className={`status-pill status-${(adv.advocateStatus || "Pending Verification").toLowerCase().replace(/\s+/g, '-')}`}>
+                            {adv.advocateStatus || "Pending Verification"}
+                          </span>
+                        </div>
+                        <div>
+                          <strong>Email:</strong> ✉ {adv.email}
                         </div>
                         {adv.phone && (
                           <div>
-                            <strong>Phone:</strong> {adv.phone}
+                            <strong>Phone:</strong> 📞 {adv.phone}
                           </div>
                         )}
                       </div>

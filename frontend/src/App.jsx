@@ -19,42 +19,42 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 // NEW IMPORT
 import AdminLogin from "./pages/admin/AdminLogin";
 
+function AdminPortal() {
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+
+  let isAdmin = false;
+  if (storedUser && token) {
+    try {
+      const parsed = JSON.parse(storedUser);
+      if (parsed.role === "admin") {
+        isAdmin = true;
+      }
+    } catch (e) {}
+  }
+
+  return isAdmin ? <AdminDashboard /> : <AdminLogin />;
+}
+
 function App() {
-
   return (
-
     <BrowserRouter>
-
       <Routes>
-
         <Route path="/" element={<Home />} />
-
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
-
         <Route path="/otp" element={<OTPVerification />} />
-
         <Route path="/client" element={<ClientDashboard />} />
-
         <Route path="/advocate" element={<AdvocateDashboard />} />
-
-        <Route path="/admin" element={<AdminDashboard />} />
-
         <Route path="/advocate-login" element={<AdvocateLogin />} />
 
-        {/* NEW ADMIN LOGIN PAGE */}
-        <Route path="/admin-login" element={<AdminLogin />} />
-
-        {/* NEW ADMIN DASHBOARD ROUTE */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
+        {/* STANDALONE SEPARATE ADMIN PORTAL */}
+        <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/admin-login" element={<AdminPortal />} />
+        <Route path="/admin/dashboard" element={<AdminPortal />} />
       </Routes>
-
     </BrowserRouter>
-
   );
-
 }
 
 export default App;

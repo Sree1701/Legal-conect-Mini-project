@@ -12,9 +12,6 @@ function AdvocateDashboard() {
   const [viewTab, setViewTab] = useState("assigned"); // 'assigned' | 'all'
   const [statusFilter, setStatusFilter] = useState("All");
 
-  // Selected document for preview modal
-  const [previewDoc, setPreviewDoc] = useState(null);
-
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -30,13 +27,13 @@ function AdvocateDashboard() {
   const fetchAdvocateData = async (advocateId) => {
     setLoading(true);
     try {
-      // Fetch cases specifically assigned to this advocate
+      // Fetch cases assigned to advocate
       const assignedRes = await api.get(`/complaints/advocate/${advocateId}`);
       if (assignedRes.data.success) {
         setCases(assignedRes.data.data);
       }
 
-      // Fetch all cases registered in system
+      // Fetch all cases
       const allRes = await api.get("/complaints");
       if (allRes.data.success) {
         setAllCases(allRes.data.data);
@@ -90,12 +87,23 @@ function AdvocateDashboard() {
     return c.status.toLowerCase() === statusFilter.toLowerCase();
   });
 
+  // Calculate Experience & Verification status (Requirements 5 & 6)
+  const enrollmentYear = user?.enrollmentYear;
+  const experienceYears =
+    user?.experience !== undefined
+      ? user.experience
+      : enrollmentYear
+      ? Math.max(0, new Date().getFullYear() - parseInt(enrollmentYear, 10))
+      : 0;
+
+  const advocateStatus = user?.advocateStatus || "Pending Verification";
+
   return (
     <div className="advocate-dashboard-wrapper">
       {/* ADVOCATE DASHBOARD HEADER */}
       <header className="adv-header">
         <div className="adv-brand">
-          <span className="adv-logo">👨‍⚖</span>
+          <img src="/logo.png" alt="LegalConnect Logo" className="advocate-dashboard-logo-image" />
           <div>
             <h2>LegalConnect Portal</h2>
             <p>Advocate Case Management System</p>
@@ -104,7 +112,7 @@ function AdvocateDashboard() {
 
         <div className="adv-user-controls">
           <div className="adv-user-badge">
-            <span>Advocate: <strong>{user?.name || "Legal Counsel"}</strong></span>
+            <span>Advocate: <strong>{user?.fullName || user?.name || "Legal Counsel"}</strong></span>
           </div>
           <button className="adv-logout-btn" onClick={handleLogout}>
             Logout ➔
@@ -115,10 +123,41 @@ function AdvocateDashboard() {
       {/* ADVOCATE HERO STATS BANNER */}
       <section className="adv-hero-banner">
         <div className="adv-hero-content">
-          <h1>Welcome, Counselor {user?.name || ""}</h1>
-          <p>
-            Review client case submissions, inspect legal documents and evidence files, and provide case progress updates.
+          <div className="adv-profile-header-meta">
+            <h1>Welcome, Counselor {user?.fullName || user?.name || ""}</h1>
+
+            {/* VERIFICATION STATUS BADGE (Requirement 6) */}
+            <div className={`adv-profile-status-badge status-${advocateStatus.toLowerCase().replace(/\s+/g, '-')}`}>
+              Verification Status: <strong>{advocateStatus}</strong>
+            </div>
+          </div>
+
+          <p className="adv-sub-desc">
+            Review client case submissions, inspect legal documents, and update case progress.
           </p>
+
+          {/* ADVOCATE CREDENTIALS & CALCULATED EXPERIENCE (Requirements 4, 5, 6) */}
+          <div className="adv-credentials-strip">
+            <div className="cred-item">
+              <span className="cred-icon">📜</span>
+              <span>Bar Council ID: <strong>{user?.barCouncilId || "Not Registered"}</strong></span>
+            </div>
+            <div className="cred-item">
+              <span className="cred-icon">📅</span>
+              <span>Enrollment Year: <strong>{enrollmentYear || "N/A"}</strong></span>
+            </div>
+            <div className="cred-item highlight-exp">
+              <span className="cred-icon">🎖</span>
+              <span>Experience: <strong>{experienceYears} Years</strong></span>
+            </div>
+          </div>
+
+          {/* WARNING BANNER FOR PENDING VERIFICATION */}
+          {advocateStatus === "Pending Verification" && (
+            <div className="adv-pending-notice-banner">
+              ⚠️ <strong>Account Verification Pending:</strong> Your advocate profile is currently pending verification by the System Administrator. Once approved based on your Bar Council ID, your verified status will be visible to clients across the portal.
+            </div>
+          )}
 
           <div className="adv-stats-row">
             <div className="adv-stat-box">
@@ -208,7 +247,7 @@ function AdvocateDashboard() {
                   <div className="adv-client-panel">
                     <span className="client-icon">👤</span>
                     <div>
-                      <strong>Client:</strong> {c.user?.name || "Client"}
+                      <strong>Client:</strong> {c.user?.name || c.user?.fullName || "Client"}
                       <div className="client-contact-info">
                         ✉ {c.user?.email || "N/A"} {c.user?.phone ? `| 📞 ${c.user.phone}` : ""}
                       </div>
@@ -273,7 +312,7 @@ function AdvocateDashboard() {
                       </div>
                     ) : (
                       <div className="assigned-other-info">
-                        Assigned to: <strong>{c.advocate.name}</strong>
+                        Assigned to: <strong>{c.advocate.name || c.advocate.fullName}</strong>
                       </div>
                     )}
                   </div>

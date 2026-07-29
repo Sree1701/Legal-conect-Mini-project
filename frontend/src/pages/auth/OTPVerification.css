@@ -1,0 +1,112 @@
+/* ==========================================
+   OTP VERIFICATION STYLES
+========================================== */
+
+.otp-card {
+  max-width: 440px !important;
+  border-top: 5px solid #0B4F75 !important;
+}
+
+.otp-badge {
+  display: inline-block;
+  background: #eef5fb;
+  color: #0B4F75;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(11, 79, 117, 0.15);
+}
+
+.otp-email-display {
+  display: inline-block;
+  margin-top: 8px;
+  background: #f1f5f9;
+  color: #0B4F75;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  border: 1px solid #cbd5e1;
+  word-break: break-all;
+}
+
+.otp-input-wrapper {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.otp-input-wrapper input {
+  width: 100%;
+  padding: 16px;
+  font-size: 28px;
+  letter-spacing: 12px;
+  text-align: center;
+  font-weight: bold;
+  color: #0B4F75;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  background: #fafcfd;
+  transition: all 0.2s ease;
+}
+
+.otp-input-wrapper input:focus {
+  border-color: #0B4F75;
+  box-shadow: 0 0 0 4px rgba(11, 79, 117, 0.15);
+  background: #ffffff;
+}
+
+.otp-submit-btn {
+  background: #0B4F75 !important;
+}
+
+.otp-footer-actions {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.otp-footer-actions p {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.otp-resend-btn {
+  background: none;
+  border: none;
+  color: #0B4F75;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.otp-resend-btn:hover {
+  color: #083B59;
+}
+
+.otp-resend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.otp-back-link {
+  margin-top: 10px;
+}
+
+.otp-back-link a {
+  color: #64748b;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.otp-back-link a:hover {
+  color: #0B4F75;
+  text-decoration: underline;
+}

@@ -3,6 +3,7 @@ import "./Footer.css";
 function Footer() {
   return (
     <footer className="footer">
+      <img src="/logo.png" alt="LegalConnect Logo" className="footer-logo-image" />
       <h2>LegalConnect</h2>
       <p>
         A Web-Based Legal Assistance &amp; Case Management Portal

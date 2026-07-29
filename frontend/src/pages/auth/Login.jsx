@@ -38,22 +38,19 @@ function Login() {
         password: formData.password,
       });
 
-      const { token, user } = response.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Redirect based on role
-      if (user.role === "advocate") {
-        navigate("/advocate");
-      } else if (user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/client");
+      if (response.data.success) {
+        // Navigate to OTP Verification page for Requirement 8
+        navigate("/otp", {
+          state: {
+            email: response.data.email || formData.email,
+            role: response.data.role || "client",
+          },
+        });
       }
     } catch (err) {
       const message =
         err.response?.data?.message ||
-        "Failed to connect to backend server. Please check your network and MongoDB.";
+        "Failed to connect to backend server. Please check your credentials and database.";
       setError(message);
     } finally {
       setLoading(false);
@@ -67,7 +64,9 @@ function Login() {
       <main className="auth-container">
         <div className="auth-card">
           <div className="auth-header">
-            <div className="auth-badge">⚖ LegalConnect</div>
+            <div className="auth-badge">
+              <img src="/logo.png" alt="LegalConnect Logo" className="auth-badge-logo" /> LegalConnect
+            </div>
             <h2>User Login</h2>
             <p className="auth-subtitle">
               Sign in to manage your legal consultations, cases, and documents.
@@ -114,7 +113,7 @@ function Login() {
               className="auth-submit-btn"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login to Account"}
+              {loading ? "Verifying Credentials..." : "Continue to OTP Verification ➔"}
             </button>
           </form>
 

@@ -381,8 +381,91 @@
   outline: none;
 }
 
+/* PROFILE HEADER STATUS & CREDENTIALS STRIP */
+.adv-profile-header-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 8px;
+}
+
+.adv-profile-status-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adv-profile-status-badge.status-pending-verification {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.adv-profile-status-badge.status-approved {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.adv-profile-status-badge.status-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.adv-profile-status-badge.status-suspended {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.adv-sub-desc {
+  margin-bottom: 20px;
+}
+
+.adv-credentials-strip {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.cred-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cred-item.highlight-exp {
+  color: #FFD54F;
+}
+
+.adv-pending-notice-banner {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  color: #b45309;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
 @media (max-width: 768px) {
   .adv-header, .adv-hero-banner {
     padding: 20px;
   }
 }
+

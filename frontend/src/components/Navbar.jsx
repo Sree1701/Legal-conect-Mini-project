@@ -38,7 +38,6 @@ function Navbar() {
         <Link to="/advocate-login" className="advocate-btn">
           Advocate Portal
         </Link>
-
       </nav>
 
     </header>

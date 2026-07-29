@@ -1,67 +1,119 @@
-.admin-login-container{
+/* ==========================================
+   ADMIN LOGIN & ADMIN PORTAL STYLES
+========================================== */
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    min-height:100vh;
-
-    background:#f5f7fb;
-
+.admin-card {
+  border-top: 5px solid #0f172a !important;
 }
 
-.admin-login-card{
-
-    width:400px;
-
-    background:white;
-
-    padding:40px;
-
-    border-radius:15px;
-
-    box-shadow:0 5px 20px rgba(0,0,0,.15);
-
-    text-align:center;
-
+.admin-badge {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  border: 1px solid #cbd5e1;
 }
 
-.admin-logo{
-
-    width:120px;
-
-    margin-bottom:20px;
-
+.admin-default-info-banner {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1e40af;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  text-align: left;
 }
 
-.admin-login-card input{
-
-    width:100%;
-
-    padding:12px;
-
-    margin:12px 0;
-
-    border:1px solid #ccc;
-
-    border-radius:6px;
-
+.admin-default-info-banner code {
+  background: #dbeafe;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
 }
 
-.admin-login-card button{
+.admin-submit-btn {
+  background: #0f172a !important;
+}
 
-    width:100%;
+.admin-submit-btn:hover:not(:disabled) {
+  background: #1e293b !important;
+}
 
-    padding:12px;
+/* ==========================================
+   STANDALONE ADMIN HEADER & FOOTER
+========================================== */
 
-    background:#0b1f4d;
+.standalone-admin-header {
+  width: 100%;
+  background: #0f172a;
+  color: white;
+  padding: 16px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
 
-    color:white;
+.admin-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-    border:none;
+.admin-header-icon {
+  font-size: 24px;
+  background: #1e293b;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
 
-    border-radius:6px;
+.admin-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #f8fafc;
+}
 
-    cursor:pointer;
+.admin-header-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
 
+.admin-exit-btn {
+  background: #1e293b;
+  color: #cbd5e1 !important;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #334155;
+  transition: all 0.2s ease;
+}
+
+.admin-exit-btn:hover {
+  background: #334155;
+  color: white !important;
+}
+
+.standalone-admin-footer {
+  width: 100%;
+  background: #0f172a;
+  color: #64748b;
+  text-align: center;
+  padding: 16px;
+  font-size: 13px;
+  border-top: 1px solid #1e293b;
 }

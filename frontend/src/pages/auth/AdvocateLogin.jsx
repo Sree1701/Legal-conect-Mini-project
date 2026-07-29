@@ -38,19 +38,21 @@ function AdvocateLogin() {
         password: formData.password,
       });
 
-      const { token, user } = response.data;
+      if (response.data.success) {
+        if (response.data.role && response.data.role !== "advocate") {
+          setError(
+            `This account is registered as a ${response.data.role.toUpperCase()}. Please use the appropriate login portal.`
+          );
+          return;
+        }
 
-      if (user.role !== "advocate") {
-        setError(
-          `This account is registered as a ${user.role.toUpperCase()}. Please use the User Login page.`
-        );
-        return;
+        navigate("/otp", {
+          state: {
+            email: response.data.email || formData.email,
+            role: "advocate",
+          },
+        });
       }
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      navigate("/advocate");
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -68,7 +70,9 @@ function AdvocateLogin() {
       <main className="auth-container advocate-bg">
         <div className="auth-card advocate-card">
           <div className="auth-header">
-            <div className="advocate-badge">👨‍⚖ Advocate Portal</div>
+            <div className="advocate-badge">
+              <img src="/logo.png" alt="LegalConnect Logo" className="auth-badge-logo" /> Advocate Portal
+            </div>
             <h2>Advocate Portal Login</h2>
             <p className="auth-subtitle">
               Login to manage client consultations, review case files, and update hearing status.
@@ -127,7 +131,7 @@ function AdvocateLogin() {
               className="auth-submit-btn advocate-btn-primary"
               disabled={loading}
             >
-              {loading ? "Verifying Portal Access..." : "Login to Advocate Portal"}
+              {loading ? "Verifying Credentials..." : "Continue to OTP Verification ➔"}
             </button>
           </form>
 

@@ -11,6 +11,8 @@ function Register() {
     email: "",
     phone: "",
     role: "client",
+    barCouncilId: "",
+    enrollmentYear: "",
     password: "",
     confirmPassword: "",
   });
@@ -36,6 +38,19 @@ function Register() {
       return;
     }
 
+    if (formData.role === "advocate") {
+      if (!formData.barCouncilId || !formData.enrollmentYear) {
+        setError("Bar Council ID and Year of Enrollment are required for advocates.");
+        return;
+      }
+      const currentYear = new Date().getFullYear();
+      const year = parseInt(formData.enrollmentYear, 10);
+      if (isNaN(year) || year < 1950 || year > currentYear) {
+        setError(`Please enter a valid Year of Enrollment between 1950 and ${currentYear}.`);
+        return;
+      }
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -52,20 +67,25 @@ function Register() {
     try {
       const response = await api.post("/auth/register", {
         name: formData.name,
+        fullName: formData.name,
         email: formData.email,
         phone: formData.phone,
         role: formData.role,
+        barCouncilId: formData.barCouncilId,
+        enrollmentYear: formData.enrollmentYear ? parseInt(formData.enrollmentYear, 10) : null,
         password: formData.password,
       });
 
-      setSuccess("Account created successfully! Redirecting to login...");
+      setSuccess(
+        response.data.message || "Account created successfully! Redirecting to login..."
+      );
       setTimeout(() => {
         if (formData.role === "advocate") {
           navigate("/advocate-login");
         } else {
           navigate("/login");
         }
-      }, 1500);
+      }, 1800);
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -83,7 +103,9 @@ function Register() {
       <main className="auth-container">
         <div className="auth-card register-card">
           <div className="auth-header">
-            <div className="auth-badge">⚖ LegalConnect</div>
+            <div className="auth-badge">
+              <img src="/logo.png" alt="LegalConnect Logo" className="auth-badge-logo" /> LegalConnect
+            </div>
             <h2>Create Your Account</h2>
             <p className="auth-subtitle">
               Join LegalConnect to access verified legal guidance and services.
@@ -156,6 +178,45 @@ function Register() {
                 </select>
               </div>
             </div>
+
+            {/* CONDITIONAL ADVOCATE FIELDS */}
+            {formData.role === "advocate" && (
+              <>
+                <div className="input-group advocate-extra-field">
+                  <label htmlFor="barCouncilId">Bar Council ID *</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">📜</span>
+                    <input
+                      id="barCouncilId"
+                      type="text"
+                      name="barCouncilId"
+                      value={formData.barCouncilId}
+                      onChange={handleChange}
+                      placeholder="e.g. MAH/1234/2020 or State Bar ID"
+                      required={formData.role === "advocate"}
+                    />
+                  </div>
+                </div>
+
+                <div className="input-group advocate-extra-field">
+                  <label htmlFor="enrollmentYear">Year of Enrollment *</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">📅</span>
+                    <input
+                      id="enrollmentYear"
+                      type="number"
+                      name="enrollmentYear"
+                      value={formData.enrollmentYear}
+                      onChange={handleChange}
+                      placeholder="e.g. 2018"
+                      min="1950"
+                      max={new Date().getFullYear()}
+                      required={formData.role === "advocate"}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="input-group">
               <label htmlFor="password">Password *</label>
