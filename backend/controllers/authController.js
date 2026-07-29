@@ -17,19 +17,6 @@ const calculateExperience = (enrollmentYear) => {
 // ==========================
 exports.seedDefaultAdmin = async () => {
     try {
-        // Automatically drop legacy stale MongoDB indexes (such as username_1)
-        try {
-            const indexes = await User.collection.indexes();
-            for (const index of indexes) {
-                if (index.name !== "_id_" && index.name !== "email_1") {
-                    await User.collection.dropIndex(index.name);
-                }
-            }
-            await User.syncIndexes();
-        } catch (idxErr) {
-            // Ignore if collection not yet initialized
-        }
-
         const adminEmail = "admin@gmail.com";
         const existingAdmin = await User.findOne({ email: adminEmail });
 
@@ -74,29 +61,25 @@ exports.register = async (req, res) => {
             enrollmentYear,
         } = req.body;
 
-        const userName = (fullName || name || "").trim();
+        const userName = fullName || name;
 
         if (!userName || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Please fill in all required fields (Full Name, Email, Password).",
+                message: "Please fill in all required fields.",
             });
         }
 
-        let userRole = (role || "client").toString().toLowerCase().trim();
-        if (userRole === "citizen" || userRole === "user") {
-            userRole = "client";
-        }
-
-        const cleanEmail = email.toLowerCase().trim();
-        const existingUser = await User.findOne({ email: cleanEmail });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
 
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: "An account with this email address already exists.",
+                message: "An account with this email already exists.",
             });
         }
+
+        const userRole = role || "client";
 
         // Advocate registration validation
         if (userRole === "advocate") {
@@ -112,7 +95,7 @@ exports.register = async (req, res) => {
 
         const newUser = new User({
             fullName: userName,
-            email: cleanEmail,
+            email: email.toLowerCase(),
             password: hashedPassword,
             phone: phone || "",
             role: userRole,
