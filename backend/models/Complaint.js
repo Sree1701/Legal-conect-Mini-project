@@ -55,6 +55,8 @@ const complaintSchema = new mongoose.Schema(
             "Pending",
             "Assigned",
             "In Progress",
+            "Hearing Scheduled",
+            "Under Review",
             "Resolved",
             "Closed"
         ],

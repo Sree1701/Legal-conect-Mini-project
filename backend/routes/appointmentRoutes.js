@@ -4,6 +4,7 @@ const router = express.Router();
 
 const {
     bookAppointment,
+    bookAdvocateSlot,
     getClientAppointments,
     getAdvocateAppointments,
     assignSlot,
@@ -18,6 +19,7 @@ const {
 // ============================================
 
 router.post("/book", bookAppointment);
+router.post("/book-slot", bookAdvocateSlot);
 
 
 // ============================================

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Appointment = require("../models/Appointment");
 
 // ===================================================
@@ -64,13 +65,14 @@ exports.getClientAppointments = async (req, res) => {
 
     try {
 
-        const appointments = await Appointment.find({
+        const { clientId } = req.params;
+        const query = mongoose.Types.ObjectId.isValid(clientId)
+            ? { $or: [{ client: clientId }, { client: new mongoose.Types.ObjectId(clientId) }] }
+            : { client: clientId };
 
-            client: req.params.clientId
+        const appointments = await Appointment.find(query)
 
-        })
-
-        .populate("advocate", "fullName email phone")
+        .populate("advocate", "fullName email phone name")
 
         .sort({
 
@@ -113,13 +115,18 @@ exports.getAdvocateAppointments = async (req, res) => {
 
     try {
 
-        const appointments = await Appointment.find({
+        const { advocateId } = req.params;
+        if (!advocateId || advocateId === "undefined" || advocateId === "null") {
+            return res.status(400).json({ success: false, message: "Valid Advocate ID is required" });
+        }
 
-            advocate: req.params.advocateId
+        const query = mongoose.Types.ObjectId.isValid(advocateId)
+            ? { $or: [{ advocate: advocateId }, { advocate: new mongoose.Types.ObjectId(advocateId) }] }
+            : { advocate: advocateId };
 
-        })
+        const appointments = await Appointment.find(query)
 
-        .populate("client", "fullName email phone")
+        .populate("client", "fullName email phone name")
 
         .sort({
 
@@ -344,4 +351,80 @@ exports.completeAppointment = async (req, res) => {
 
     }
 
+};
+
+// ===================================================
+// CLIENT BOOKS A SPECIFIC ADVOCATE PREFERRED SLOT
+// ===================================================
+exports.bookAdvocateSlot = async (req, res) => {
+    try {
+        const { client, advocate, slotId, issue, description } = req.body;
+
+        if (!client || !advocate || !issue) {
+            return res.status(400).json({
+                success: false,
+                message: "Client ID, Advocate ID, and Issue subject are required.",
+            });
+        }
+
+        const User = require("../models/User");
+        const advocateUser = await User.findById(advocate);
+        if (!advocateUser) {
+            return res.status(404).json({
+                success: false,
+                message: "Advocate account not found.",
+            });
+        }
+
+        let slot = null;
+        if (slotId && advocateUser.availableSlots) {
+            slot = advocateUser.availableSlots.find((s) => String(s.slotId) === String(slotId));
+        }
+
+        if (slot && slot.isBooked) {
+            return res.status(400).json({
+                success: false,
+                message: "This preferred slot has already been booked by another client. Please select another slot.",
+            });
+        }
+
+        const appointment = new Appointment({
+            client,
+            advocate,
+            issue,
+            description: description || "",
+            appointmentDate: slot ? slot.date : req.body.appointmentDate || null,
+            appointmentTime: slot ? slot.startTime : req.body.appointmentTime || "",
+            duration: slot ? slot.duration : req.body.duration || 30,
+            consultationFee: slot ? slot.fee : req.body.consultationFee || advocateUser.consultationFee || 500,
+            status: "Pending",
+        });
+
+        await appointment.save();
+
+        if (slot) {
+            slot.isBooked = true;
+            slot.bookedBy = client;
+            slot.appointmentRef = appointment._id;
+            await advocateUser.save();
+        }
+
+        const populatedAppt = await Appointment.findById(appointment._id)
+            .populate("client", "fullName email phone name")
+            .populate("advocate", "fullName email phone name specialization");
+
+        res.status(201).json({
+            success: true,
+            message: slot
+                ? `Preferred slot (${slot.date} @ ${slot.startTime}) reserved & consultation request sent!`
+                : "Consultation request sent successfully!",
+            appointment: populatedAppt,
+        });
+    } catch (error) {
+        console.error("bookAdvocateSlot Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error booking advocate slot: " + error.message,
+        });
+    }
 };

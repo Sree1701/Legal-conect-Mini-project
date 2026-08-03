@@ -305,6 +305,10 @@ exports.verifyOTP = async (req, res) => {
             barCouncilId: user.barCouncilId || "",
             enrollmentYear: user.enrollmentYear || null,
             experience: expYears,
+            specialization: user.specialization || "General Legal Practice",
+            bio: user.bio || "",
+            officeAddress: user.officeAddress || "",
+            consultationFee: user.consultationFee || 0,
             advocateStatus: user.advocateStatus || (user.role === "advocate" ? "Pending Verification" : "Approved"),
         };
 

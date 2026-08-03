@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Complaint = require("../models/Complaint");
 
 // Create Complaint / Case
@@ -7,7 +8,7 @@ exports.createComplaint = async (req, res) => {
 
         const complaint = await Complaint.create({
             user: user || req.user?.id,
-            advocate,
+            advocate: advocate || null,
             title,
             description,
             category: category || "Other",
@@ -57,7 +58,11 @@ exports.getAllComplaints = async (req, res) => {
 exports.getComplaintsByClient = async (req, res) => {
     try {
         const { clientId } = req.params;
-        const complaints = await Complaint.find({ user: clientId })
+        const query = mongoose.Types.ObjectId.isValid(clientId)
+            ? { $or: [{ user: clientId }, { user: new mongoose.Types.ObjectId(clientId) }] }
+            : { user: clientId };
+
+        const complaints = await Complaint.find(query)
             .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus")
             .sort({ createdAt: -1 });
 
@@ -78,8 +83,20 @@ exports.getComplaintsByClient = async (req, res) => {
 exports.getComplaintsByAdvocate = async (req, res) => {
     try {
         const { advocateId } = req.params;
-        const complaints = await Complaint.find({ advocate: advocateId })
-            .populate("user", "fullName email phone")
+        if (!advocateId || advocateId === "undefined" || advocateId === "null") {
+            return res.status(400).json({
+                success: false,
+                message: "Valid Advocate ID is required"
+            });
+        }
+
+        const query = mongoose.Types.ObjectId.isValid(advocateId)
+            ? { $or: [{ advocate: advocateId }, { advocate: new mongoose.Types.ObjectId(advocateId) }] }
+            : { advocate: advocateId };
+
+        const complaints = await Complaint.find(query)
+            .populate("user", "fullName email phone name")
+            .populate("advocate", "fullName email phone barCouncilId enrollmentYear advocateStatus")
             .sort({ createdAt: -1 });
 
         res.status(200).json({

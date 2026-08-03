@@ -1,7 +1,4 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
-import { bookAppointment } from "../../services/appointmentService";
+import { bookAppointment, bookAdvocateSlot } from "../../services/appointmentService";
 import "./ClientDashboard.css";
 
 function ClientDashboard() {
@@ -14,9 +11,10 @@ function ClientDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
 
-  // Modal State for New Case Registration
+  // Modal State for New Case Registration & Slot Allotment
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [selectedAdvocate, setSelectedAdvocate] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const [caseForm, setCaseForm] = useState({
     title: "",
     category: "Civil",
@@ -75,6 +73,7 @@ function ClientDashboard() {
 
   const openNewCaseModal = (advocate = null) => {
     setSelectedAdvocate(advocate);
+    setSelectedSlot(null);
     setCaseForm({ title: "", category: "Civil", description: "" });
     setDocuments([]);
     setMessage("");
@@ -114,9 +113,12 @@ function ClientDashboard() {
     setMessage("");
 
     try {
+      const advId = selectedAdvocate ? String(selectedAdvocate._id || selectedAdvocate.id) : null;
+      const clientId = String(user.id || user._id);
+
       const payload = {
-        user: user.id || user._id,
-        advocate: selectedAdvocate ? (selectedAdvocate._id || selectedAdvocate.id) : null,
+        user: clientId,
+        advocate: advId,
         title: caseForm.title,
         category: caseForm.category,
         description: caseForm.description,
@@ -125,39 +127,36 @@ function ClientDashboard() {
 
       const res = await api.post("/complaints", payload);
 
-if (res.data.success) {
+      if (res.data.success) {
+        // Book Preferred Slot or Standard Consultation Appointment
+        if (advId) {
+          if (selectedSlot) {
+            await bookAdvocateSlot({
+              client: clientId,
+              advocate: advId,
+              slotId: selectedSlot.slotId,
+              issue: caseForm.title,
+              description: caseForm.description,
+            });
+          } else {
+            await bookAppointment({
+              client: clientId,
+              advocate: advId,
+              issue: caseForm.title,
+              description: caseForm.description,
+            });
+          }
+        }
 
-    // Create Appointment Automatically
+        setMessage("Case Registered & Preferred Consultation Slot Reserved Successfully!");
+        fetchClientCases(user.id || user._id);
+        fetchAdvocates();
 
-    if (selectedAdvocate) {
-
-        await bookAppointment({
-
-            client: user.id || user._id,
-
-            advocate: selectedAdvocate._id || selectedAdvocate.id,
-
-            issue: caseForm.title,
-
-            description: caseForm.description
-
-        });
-
-    }
-
-    setMessage("Case Registered & Consultation Request Sent Successfully!");
-
-    fetchClientCases(user.id || user._id);
-
-    setTimeout(() => {
-
-        setShowCaseModal(false);
-
-        setActiveTab("cases");
-
-    }, 1200);
-
-}
+        setTimeout(() => {
+          setShowCaseModal(false);
+          setActiveTab("cases");
+        }, 1200);
+      }
     } catch (err) {
       setMessage("Failed to submit case. Please try again.");
     } finally {
@@ -481,16 +480,20 @@ if (res.data.success) {
 
             {selectedAdvocate ? (
               <div className="selected-advocate-banner">
-                <span>Selected Advocate:</span>
-                <strong>👨‍⚖ {selectedAdvocate.name}</strong> ({selectedAdvocate.specialization})
+                <div>
+                  <span>Selected Advocate:</span>
+                  <strong>👨‍⚖ {selectedAdvocate.name}</strong> ({selectedAdvocate.specialization})
+                </div>
               </div>
             ) : (
               <div className="select-advocate-dropdown">
                 <label>Select Advocate (Optional):</label>
                 <select
                   onChange={(e) => {
-                    const adv = advocates.find((a) => (a._id || a.id) === e.target.value);
+                    const selectedVal = e.target.value;
+                    const adv = advocates.find((a) => String(a._id || a.id) === String(selectedVal));
                     setSelectedAdvocate(adv || null);
+                    setSelectedSlot(null);
                   }}
                   value={selectedAdvocate?._id || selectedAdvocate?.id || ""}
                 >
@@ -501,6 +504,35 @@ if (res.data.success) {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* PREFERRED AVAILABLE SLOTS SELECTOR */}
+            {selectedAdvocate && selectedAdvocate.availableSlots && selectedAdvocate.availableSlots.filter((s) => !s.isBooked).length > 0 && (
+              <div className="client-slot-picker-box">
+                <label><strong>📅 Select Advocate's Preferred Booking Slot (Optional):</strong></label>
+                <div className="client-slot-chips">
+                  {selectedAdvocate.availableSlots
+                    .filter((s) => !s.isBooked)
+                    .map((s) => {
+                      const isSelected = selectedSlot?.slotId === s.slotId;
+                      return (
+                        <button
+                          type="button"
+                          key={s.slotId}
+                          className={`client-slot-chip ${isSelected ? "selected" : ""}`}
+                          onClick={() => setSelectedSlot(isSelected ? null : s)}
+                        >
+                          {isSelected ? "✓ " : ""}📅 {s.date} | ⏰ {s.startTime} - {s.endTime} (₹{s.fee})
+                        </button>
+                      );
+                    })}
+                </div>
+                {selectedSlot && (
+                  <p className="selected-slot-notice">
+                    ✓ Reserved Slot: <strong>{selectedSlot.date} @ {selectedSlot.startTime}</strong> (Fee: ₹{selectedSlot.fee})
+                  </p>
+                )}
               </div>
             )}
 

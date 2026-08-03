@@ -61,7 +61,91 @@ const userSchema = new mongoose.Schema(
         type: String,
         enum: ["Pending Verification", "Approved", "Rejected", "Suspended"],
         default: "Pending Verification",
-    }
+    },
+
+    specialization: {
+        type: String,
+        default: "General Legal Practice",
+    },
+
+    bio: {
+        type: String,
+        default: "",
+    },
+
+    officeAddress: {
+        type: String,
+        default: "",
+    },
+
+    consultationFee: {
+        type: Number,
+        default: 0,
+    },
+
+    availableSlots: [
+        {
+            slotId: {
+                type: String,
+                default: function () {
+                    return new mongoose.Types.ObjectId().toString();
+                },
+            },
+            date: {
+                type: String,
+                required: true,
+            },
+            startTime: {
+                type: String,
+                required: true,
+            },
+            endTime: {
+                type: String,
+                required: true,
+            },
+            duration: {
+                type: Number,
+                default: 30,
+            },
+            fee: {
+                type: Number,
+                default: 500,
+            },
+            isBooked: {
+                type: Boolean,
+                default: false,
+            },
+            bookedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
+            appointmentRef: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Appointment",
+                default: null,
+            },
+        },
+    ],
+
+    workingHours: {
+        days: {
+            type: [String],
+            default: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        },
+        startTime: {
+            type: String,
+            default: "09:00 AM",
+        },
+        endTime: {
+            type: String,
+            default: "05:00 PM",
+        },
+        slotDuration: {
+            type: Number,
+            default: 30,
+        },
+    },
 },
 {
     timestamps: true,

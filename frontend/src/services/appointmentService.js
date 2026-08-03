@@ -4,6 +4,10 @@ export const bookAppointment = async (data) => {
     return await api.post("/appointments/book", data);
 };
 
+export const bookAdvocateSlot = async (data) => {
+    return await api.post("/appointments/book-slot", data);
+};
+
 export const getClientAppointments = async (clientId) => {
     return await api.get(`/appointments/client/${clientId}`);
 };
