@@ -1,329 +1,665 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../../services/api";
+import { useEffect, useState } from "react";
 import "./AdvocateDashboard.css";
 
+import {
+    getAdvocateAppointments,
+    assignSlot,
+    rejectAppointment,
+} from "../../services/appointmentService";
+
 function AdvocateDashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [cases, setCases] = useState([]);
-  const [allCases, setAllCases] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [viewTab, setViewTab] = useState("assigned"); // 'assigned' | 'all'
-  const [statusFilter, setStatusFilter] = useState("All");
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) {
-      navigate("/advocate-login");
-      return;
-    }
-    const parsedUser = JSON.parse(storedUser);
-    setUser(parsedUser);
+    const user = JSON.parse(localStorage.getItem("user"));
 
-    fetchAdvocateData(parsedUser.id || parsedUser._id);
-  }, [navigate]);
+    const [activeTab, setActiveTab] = useState("dashboard");
 
-  const fetchAdvocateData = async (advocateId) => {
-    setLoading(true);
-    try {
-      // Fetch cases assigned to advocate
-      const assignedRes = await api.get(`/complaints/advocate/${advocateId}`);
-      if (assignedRes.data.success) {
-        setCases(assignedRes.data.data);
-      }
+    const [appointments, setAppointments] = useState([]);
 
-      // Fetch all cases
-      const allRes = await api.get("/complaints");
-      if (allRes.data.success) {
-        setAllCases(allRes.data.data);
-      }
-    } catch (err) {
-      console.error("Error fetching advocate dashboard data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
-  };
+    const [showSlotModal, setShowSlotModal] = useState(false);
 
-  const handleUpdateStatus = async (caseId, newStatus) => {
-    try {
-      const res = await api.patch(`/complaints/${caseId}/status`, {
-        status: newStatus,
-        advocate: user.id || user._id,
-      });
+    const [slotForm, setSlotForm] = useState({
 
-      if (res.data.success) {
-        fetchAdvocateData(user.id || user._id);
-      }
-    } catch (err) {
-      alert("Failed to update case status.");
-    }
-  };
+        appointmentDate: "",
 
-  const handleAcceptCase = async (caseId) => {
-    try {
-      const res = await api.patch(`/complaints/${caseId}/status`, {
-        advocate: user.id || user._id,
-        status: "Assigned",
-      });
+        appointmentTime: "",
 
-      if (res.data.success) {
-        alert("Case accepted and assigned to your dashboard!");
-        fetchAdvocateData(user.id || user._id);
-      }
-    } catch (err) {
-      alert("Failed to accept case.");
-    }
-  };
+        duration: 30,
 
-  const displayedCases = (viewTab === "assigned" ? cases : allCases).filter((c) => {
-    if (statusFilter === "All") return true;
-    return c.status.toLowerCase() === statusFilter.toLowerCase();
-  });
+        consultationFee: "",
 
-  // Calculate Experience & Verification status (Requirements 5 & 6)
-  const enrollmentYear = user?.enrollmentYear;
-  const experienceYears =
-    user?.experience !== undefined
-      ? user.experience
-      : enrollmentYear
-      ? Math.max(0, new Date().getFullYear() - parseInt(enrollmentYear, 10))
-      : 0;
+        advocateNotes: "",
 
-  const advocateStatus = user?.advocateStatus || "Pending Verification";
+    });
 
-  return (
-    <div className="advocate-dashboard-wrapper">
-      {/* ADVOCATE DASHBOARD HEADER */}
-      <header className="adv-header">
-        <div className="adv-brand">
-          <img src="/logo.png" alt="LegalConnect Logo" className="advocate-dashboard-logo-image" />
-          <div>
-            <h2>LegalConnect Portal</h2>
-            <p>Advocate Case Management System</p>
-          </div>
-        </div>
+    // ================================
+    // Fetch Appointment Requests
+    // ================================
 
-        <div className="adv-user-controls">
-          <div className="adv-user-badge">
-            <span>Advocate: <strong>{user?.fullName || user?.name || "Legal Counsel"}</strong></span>
-          </div>
-          <button className="adv-logout-btn" onClick={handleLogout}>
-            Logout ➔
-          </button>
-        </div>
-      </header>
+    const fetchAppointments = async () => {
 
-      {/* ADVOCATE HERO STATS BANNER */}
-      <section className="adv-hero-banner">
-        <div className="adv-hero-content">
-          <div className="adv-profile-header-meta">
-            <h1>Welcome, Counselor {user?.fullName || user?.name || ""}</h1>
+        try {
 
-            {/* VERIFICATION STATUS BADGE (Requirement 6) */}
-            <div className={`adv-profile-status-badge status-${advocateStatus.toLowerCase().replace(/\s+/g, '-')}`}>
-              Verification Status: <strong>{advocateStatus}</strong>
-            </div>
-          </div>
+            const res = await getAdvocateAppointments(
 
-          <p className="adv-sub-desc">
-            Review client case submissions, inspect legal documents, and update case progress.
-          </p>
+                user.id || user._id
 
-          {/* ADVOCATE CREDENTIALS & CALCULATED EXPERIENCE (Requirements 4, 5, 6) */}
-          <div className="adv-credentials-strip">
-            <div className="cred-item">
-              <span className="cred-icon">📜</span>
-              <span>Bar Council ID: <strong>{user?.barCouncilId || "Not Registered"}</strong></span>
-            </div>
-            <div className="cred-item">
-              <span className="cred-icon">📅</span>
-              <span>Enrollment Year: <strong>{enrollmentYear || "N/A"}</strong></span>
-            </div>
-            <div className="cred-item highlight-exp">
-              <span className="cred-icon">🎖</span>
-              <span>Experience: <strong>{experienceYears} Years</strong></span>
-            </div>
-          </div>
+            );
 
-          {/* WARNING BANNER FOR PENDING VERIFICATION */}
-          {advocateStatus === "Pending Verification" && (
-            <div className="adv-pending-notice-banner">
-              ⚠️ <strong>Account Verification Pending:</strong> Your advocate profile is currently pending verification by the System Administrator. Once approved based on your Bar Council ID, your verified status will be visible to clients across the portal.
-            </div>
-          )}
+            setAppointments(res.data.appointments);
 
-          <div className="adv-stats-row">
-            <div className="adv-stat-box">
-              <span className="adv-stat-val">{cases.length}</span>
-              <span className="adv-stat-lbl">My Assigned Cases</span>
-            </div>
-            <div className="adv-stat-box">
-              <span className="adv-stat-val">
-                {cases.filter((c) => c.status === "In Progress" || c.status === "Assigned").length}
-              </span>
-              <span className="adv-stat-lbl">Active Cases</span>
-            </div>
-            <div className="adv-stat-box">
-              <span className="adv-stat-val">{allCases.length}</span>
-              <span className="adv-stat-lbl">Total Portal Cases</span>
-            </div>
-          </div>
-        </div>
-      </section>
+        }
 
-      {/* MAIN CONTENT AREA */}
-      <main className="adv-main-container">
-        {/* VIEW TABS & FILTERS */}
-        <div className="adv-filter-header">
-          <div className="adv-tabs">
-            <button
-              className={`adv-tab ${viewTab === "assigned" ? "active" : ""}`}
-              onClick={() => setViewTab("assigned")}
-            >
-              💼 My Assigned Cases ({cases.length})
-            </button>
-            <button
-              className={`adv-tab ${viewTab === "all" ? "active" : ""}`}
-              onClick={() => setViewTab("all")}
-            >
-              🌐 All Portal Cases Registered ({allCases.length})
-            </button>
-          </div>
+        catch (err) {
 
-          <div className="adv-status-filter">
-            <label>Filter Status:</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="All">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Assigned">Assigned</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-            </select>
-          </div>
-        </div>
+            console.log(err);
 
-        {/* CASES GRID */}
-        {loading ? (
-          <div className="adv-loading">Loading client cases...</div>
-        ) : displayedCases.length === 0 ? (
-          <div className="adv-empty">
-            <h3>No Cases Found</h3>
-            <p>
-              {viewTab === "assigned"
-                ? "You currently have no client cases assigned to your profile."
-                : "No cases match the selected filter."}
-            </p>
-          </div>
-        ) : (
-          <div className="adv-cases-grid">
-            {displayedCases.map((c) => {
-              const isAssignedToMe =
-                c.advocate &&
-                ((c.advocate._id || c.advocate.id) === (user.id || user._id));
+        }
 
-              return (
-                <div className="adv-case-card" key={c._id}>
-                  <div className="adv-card-header">
+    };
+
+    useEffect(() => {
+
+        fetchAppointments();
+
+    }, []);
+
+    // ================================
+    // Open Slot Modal
+    // ================================
+
+    const openSlotModal = (appointment) => {
+
+        setSelectedAppointment(appointment);
+
+        setShowSlotModal(true);
+
+    };
+
+    return (
+
+        <div className="advocate-dashboard">
+
+            {/* ================= Sidebar ================= */}
+
+            <aside className="sidebar">
+
+                <h2>⚖ LegalConnect</h2>
+
+                <button
+                    onClick={() => setActiveTab("dashboard")}
+                >
+                    Dashboard
+                </button>
+
+                <button
+                    onClick={() => setActiveTab("appointments")}
+                >
+                    Appointment Requests
+                </button>
+
+                <button
+                    onClick={() => setActiveTab("profile")}
+                >
+                    Profile
+                </button>
+
+            </aside>
+
+            {/* ================= Main ================= */}
+
+            <main className="main-content">
+
+                {/* Dashboard */}
+
+                {activeTab === "dashboard" && (
+
                     <div>
-                      <span className="adv-category-tag">{c.category} Law</span>
-                      <h3 className="adv-case-title">{c.title}</h3>
-                    </div>
-                    <span className={`adv-status-pill status-${c.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                      {c.status}
-                    </span>
-                  </div>
 
-                  {/* CLIENT INFORMATION PANEL */}
-                  <div className="adv-client-panel">
-                    <span className="client-icon">👤</span>
-                    <div>
-                      <strong>Client:</strong> {c.user?.name || c.user?.fullName || "Client"}
-                      <div className="client-contact-info">
-                        ✉ {c.user?.email || "N/A"} {c.user?.phone ? `| 📞 ${c.user.phone}` : ""}
-                      </div>
-                    </div>
-                  </div>
+                        <h1>
 
-                  <p className="adv-case-desc">{c.description}</p>
+                            Welcome Advocate
 
-                  {/* CLIENT DOCUMENTS & FILES SECTION */}
-                  <div className="adv-docs-box">
-                    <div className="adv-docs-header">
-                      <h4>📂 Client Documents &amp; Evidence Files ({c.documents?.length || 0})</h4>
-                    </div>
+                        </h1>
 
-                    {c.documents && c.documents.length > 0 ? (
-                      <div className="adv-docs-list">
-                        {c.documents.map((doc, idx) => (
-                          <div className="adv-doc-item" key={idx}>
-                            <span className="doc-type-icon">📄</span>
-                            <div className="doc-info-text">
-                              <span className="doc-title">{doc.name}</span>
-                              <span className="doc-meta">{doc.size || "File"} • Uploaded {doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : "Recently"}</span>
+                        <div className="dashboard-cards">
+
+                            <div className="card">
+
+                                <h3>
+
+                                    Pending Requests
+
+                                </h3>
+
+                                <h2>
+
+                                    {
+
+                                        appointments.filter(
+
+                                            a => a.status === "Pending"
+
+                                        ).length
+
+                                    }
+
+                                </h2>
+
                             </div>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="adv-view-doc-btn"
-                              download={doc.name}
-                            >
-                              Open / Download ➔
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="adv-no-docs">No documents uploaded by client for this case yet.</p>
-                    )}
-                  </div>
 
-                  {/* ADVOCATE ACTIONS FOOTER */}
-                  <div className="adv-card-actions">
-                    {!c.advocate ? (
-                      <button
-                        className="accept-case-btn"
-                        onClick={() => handleAcceptCase(c._id)}
-                      >
-                        + Accept &amp; Assign to My Profile
-                      </button>
-                    ) : isAssignedToMe ? (
-                      <div className="status-update-row">
-                        <label>Update Case Status:</label>
-                        <select
-                          value={c.status}
-                          onChange={(e) => handleUpdateStatus(c._id, e.target.value)}
-                        >
-                          <option value="Assigned">Assigned</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Resolved">Resolved</option>
-                          <option value="Closed">Closed</option>
-                        </select>
-                      </div>
-                    ) : (
-                      <div className="assigned-other-info">
-                        Assigned to: <strong>{c.advocate.name || c.advocate.fullName}</strong>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
-    </div>
-  );
+                            <div className="card">
+
+                                <h3>
+
+                                    Approved
+
+                                </h3>
+
+                                <h2>
+
+                                    {
+
+                                        appointments.filter(
+
+                                            a => a.status === "Approved"
+
+                                        ).length
+
+                                    }
+
+                                </h2>
+
+                            </div>
+
+                            <div className="card">
+
+                                <h3>
+
+                                    Completed
+
+                                </h3>
+
+                                <h2>
+
+                                    {
+
+                                        appointments.filter(
+
+                                            a => a.status === "Completed"
+
+                                        ).length
+
+                                    }
+
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )}
+
+                {/* ===================================== */}
+
+                {/* Appointment Requests */}
+
+                {/* ===================================== */}
+
+                {activeTab === "appointments" && (
+
+                    <div>
+
+                        <h1>
+
+                            Appointment Requests
+
+                        </h1>
+
+                        {
+
+                            appointments.length === 0 ?
+
+                            (
+
+                                <p>
+
+                                    No Appointment Requests
+
+                                </p>
+
+                            )
+
+                            :
+
+                            (
+
+                                appointments.map((appointment) => (
+
+                                    <div
+
+                                        className="appointment-card"
+
+                                        key={appointment._id}
+
+                                    >
+
+                                        <h3>
+
+                                            {
+
+                                                appointment.client?.fullName
+
+                                            }
+
+                                        </h3>
+
+                                        <p>
+
+                                            <b>
+
+                                                Issue :
+
+                                            </b>
+
+                                            {
+
+                                                appointment.issue
+
+                                            }
+
+                                        </p>
+
+                                        <p>
+
+                                            <b>
+
+                                                Description :
+
+                                            </b>
+
+                                            {
+
+                                                appointment.description
+
+                                            }
+
+                                        </p>
+
+                                        <p>
+
+                                            <b>
+
+                                                Status :
+
+                                            </b>
+
+                                            {
+
+                                                appointment.status
+
+                                            }
+
+                                        </p>
+
+                                        {
+
+                                            appointment.status === "Pending"
+
+                                            &&
+
+                                            <div>
+
+                                                <button
+
+                                                    className="approve-btn"
+
+                                                    onClick={() =>
+
+                                                        openSlotModal(
+
+                                                            appointment
+
+                                                        )
+
+                                                    }
+
+                                                >
+
+                                                    Approve
+
+                                                </button>
+
+                                                <button
+
+                                                    className="reject-btn"
+
+                                                    onClick={async () => {
+
+                                                        await rejectAppointment(
+
+                                                            appointment._id
+
+                                                        );
+
+                                                        fetchAppointments();
+
+                                                    }}
+
+                                                >
+
+                                                    Reject
+
+                                                </button>
+
+                                            </div>
+
+                                        }
+
+                                    </div>
+
+                                ))
+
+                            )
+
+                        }
+
+                    </div>
+
+                )}
+                                {/* ===========================
+                    Profile
+                ============================ */}
+
+                {activeTab === "profile" && (
+
+                    <div className="profile-section">
+
+                        <h1>My Profile</h1>
+
+                        <div className="profile-card">
+
+                            <h2>{user?.fullName}</h2>
+
+                            <p>
+                                <strong>Email :</strong> {user?.email}
+                            </p>
+
+                            <p>
+                                <strong>Phone :</strong> {user?.phone}
+                            </p>
+
+                            <p>
+                                <strong>Role :</strong> Advocate
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                )}
+
+            </main>
+
+            {/* ===========================
+                SLOT ASSIGNMENT MODAL
+            ============================ */}
+
+            {
+
+                showSlotModal && (
+
+                    <div className="modal-overlay">
+
+                        <div className="slot-modal">
+
+                            <h2>
+
+                                Assign Consultation Slot
+
+                            </h2>
+
+                            <label>
+
+                                Appointment Date
+
+                            </label>
+
+                            <input
+
+                                type="date"
+
+                                value={slotForm.appointmentDate}
+
+                                onChange={(e) =>
+
+                                    setSlotForm({
+
+                                        ...slotForm,
+
+                                        appointmentDate:
+
+                                            e.target.value,
+
+                                    })
+
+                                }
+
+                            />
+
+                            <label>
+
+                                Appointment Time
+
+                            </label>
+
+                            <input
+
+                                type="time"
+
+                                value={slotForm.appointmentTime}
+
+                                onChange={(e) =>
+
+                                    setSlotForm({
+
+                                        ...slotForm,
+
+                                        appointmentTime:
+
+                                            e.target.value,
+
+                                    })
+
+                                }
+
+                            />
+
+                            <label>
+
+                                Duration (Minutes)
+
+                            </label>
+
+                            <input
+
+                                type="number"
+
+                                value={slotForm.duration}
+
+                                onChange={(e) =>
+
+                                    setSlotForm({
+
+                                        ...slotForm,
+
+                                        duration:
+
+                                            e.target.value,
+
+                                    })
+
+                                }
+
+                            />
+
+                            <label>
+
+                                Consultation Fee
+
+                            </label>
+
+                            <input
+
+                                type="number"
+
+                                value={slotForm.consultationFee}
+
+                                onChange={(e) =>
+
+                                    setSlotForm({
+
+                                        ...slotForm,
+
+                                        consultationFee:
+
+                                            e.target.value,
+
+                                    })
+
+                                }
+
+                            />
+
+                            <label>
+
+                                Advocate Notes
+
+                            </label>
+
+                            <textarea
+
+                                rows="4"
+
+                                value={slotForm.advocateNotes}
+
+                                onChange={(e) =>
+
+                                    setSlotForm({
+
+                                        ...slotForm,
+
+                                        advocateNotes:
+
+                                            e.target.value,
+
+                                    })
+
+                                }
+
+                            />
+
+                            <div className="modal-buttons">
+
+                                <button
+
+                                    className="approve-btn"
+
+                                    onClick={async () => {
+
+                                        try {
+
+                                            await assignSlot(
+
+                                                selectedAppointment._id,
+
+                                                slotForm
+
+                                            );
+
+                                            alert(
+
+                                                "Slot Assigned Successfully"
+
+                                            );
+
+                                            setShowSlotModal(false);
+
+                                            setSelectedAppointment(null);
+
+                                            setSlotForm({
+
+                                                appointmentDate: "",
+
+                                                appointmentTime: "",
+
+                                                duration: 30,
+
+                                                consultationFee: "",
+
+                                                advocateNotes: "",
+
+                                            });
+
+                                            fetchAppointments();
+
+                                        }
+
+                                        catch (err) {
+
+                                            console.log(err);
+
+                                            alert(
+
+                                                "Failed to Assign Slot"
+
+                                            );
+
+                                        }
+
+                                    }}
+
+                                >
+
+                                    Confirm Slot
+
+                                </button>
+
+                                <button
+
+                                    className="reject-btn"
+
+                                    onClick={() => {
+
+                                        setShowSlotModal(false);
+
+                                        setSelectedAppointment(null);
+
+                                    }}
+
+                                >
+
+                                    Cancel
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+
+            }
+
+        </div>
+
+    );
+
 }
 
 export default AdvocateDashboard;

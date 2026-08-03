@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { bookAppointment } from "../../services/appointmentService";
 import "./ClientDashboard.css";
 
 function ClientDashboard() {
@@ -123,14 +124,40 @@ function ClientDashboard() {
       };
 
       const res = await api.post("/complaints", payload);
-      if (res.data.success) {
-        setMessage("Case registered successfully!");
-        fetchClientCases(user.id || user._id);
-        setTimeout(() => {
-          setShowCaseModal(false);
-          setActiveTab("cases");
-        }, 1200);
-      }
+
+if (res.data.success) {
+
+    // Create Appointment Automatically
+
+    if (selectedAdvocate) {
+
+        await bookAppointment({
+
+            client: user.id || user._id,
+
+            advocate: selectedAdvocate._id || selectedAdvocate.id,
+
+            issue: caseForm.title,
+
+            description: caseForm.description
+
+        });
+
+    }
+
+    setMessage("Case Registered & Consultation Request Sent Successfully!");
+
+    fetchClientCases(user.id || user._id);
+
+    setTimeout(() => {
+
+        setShowCaseModal(false);
+
+        setActiveTab("cases");
+
+    }, 1200);
+
+}
     } catch (err) {
       setMessage("Failed to submit case. Please try again.");
     } finally {
