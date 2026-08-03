@@ -1,4 +1,7 @@
-import { bookAppointment, bookAdvocateSlot } from "../../services/appointmentService";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import { bookAppointment, bookAdvocateSlot, getClientAppointments } from "../../services/appointmentService";
 import "./ClientDashboard.css";
 
 function ClientDashboard() {
@@ -6,8 +9,9 @@ function ClientDashboard() {
   const [user, setUser] = useState(null);
   const [advocates, setAdvocates] = useState([]);
   const [cases, setCases] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("advocates"); // 'advocates' | 'cases'
+  const [activeTab, setActiveTab] = useState("advocates"); // 'advocates' | 'cases' | 'consultations'
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
 
@@ -37,8 +41,10 @@ function ClientDashboard() {
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
 
+    const clientId = parsedUser.id || parsedUser._id;
     fetchAdvocates();
-    fetchClientCases(parsedUser.id || parsedUser._id);
+    fetchClientCases(clientId);
+    fetchClientAppointments(clientId);
   }, [navigate]);
 
   const fetchAdvocates = async () => {
@@ -62,6 +68,17 @@ function ClientDashboard() {
       }
     } catch (err) {
       console.error("Error fetching cases:", err);
+    }
+  };
+
+  const fetchClientAppointments = async (clientId) => {
+    try {
+      const res = await getClientAppointments(clientId);
+      if (res?.data?.success) {
+        setAppointments(res.data.appointments || []);
+      }
+    } catch (err) {
+      console.error("Error fetching appointments:", err);
     }
   };
 
@@ -150,6 +167,7 @@ function ClientDashboard() {
 
         setMessage("Case Registered & Preferred Consultation Slot Reserved Successfully!");
         fetchClientCases(user.id || user._id);
+        fetchClientAppointments(user.id || user._id);
         fetchAdvocates();
 
         setTimeout(() => {
@@ -269,6 +287,12 @@ function ClientDashboard() {
             📂 My Cases &amp; Documents ({cases.length})
           </button>
           <button
+            className={`tab-btn ${activeTab === "consultations" ? "active" : ""}`}
+            onClick={() => setActiveTab("consultations")}
+          >
+            💬 Booked Consultations &amp; Gitter Links ({appointments.length})
+          </button>
+          <button
             className="action-btn-gold"
             onClick={() => openNewCaseModal()}
           >
@@ -346,6 +370,14 @@ function ClientDashboard() {
                             {adv.advocateStatus || "Pending Verification"}
                           </span>
                         </div>
+                        {adv.availableSlots && adv.availableSlots.filter((s) => !s.isBooked).length > 0 && (
+                          <div className="slots-badge-row">
+                            <strong>Preferred Slots:</strong>{" "}
+                            <span className="slots-open-badge">
+                              📅 {adv.availableSlots.filter((s) => !s.isBooked).length} Booking Slots Available
+                            </span>
+                          </div>
+                        )}
                         <div>
                           <strong>Email:</strong> ✉ {adv.email}
                         </div>
@@ -409,7 +441,7 @@ function ClientDashboard() {
                         <strong>Assigned Advocate:</strong>{" "}
                         {c.advocate ? (
                           <span className="advocate-name-tag">
-                            👨‍⚖ {c.advocate.name} ({c.advocate.specialization || "Advocate"})
+                            👨‍⚖ {c.advocate.fullName || c.advocate.name} ({c.advocate.specialization || "Advocate"})
                           </span>
                         ) : (
                           <span className="unassigned-tag">No Advocate Assigned</span>
@@ -420,6 +452,42 @@ function ClientDashboard() {
                         {new Date(c.createdAt).toLocaleDateString()}
                       </div>
                     </div>
+
+                    {/* CASE-BOUND SCHEDULED HEARING SLOT & GITTER MEETING ROOM */}
+                    {(c.hearingDate || c.meetingLink) && (
+                      <div className="client-gitter-box">
+                        <div className="gitter-header">
+                          <span className="gitter-icon">📅</span>
+                          <div>
+                            <h4>Scheduled Case Hearing &amp; Consultation Slot</h4>
+                            <p>
+                              <strong>Date:</strong> {c.hearingDate || "TBD"} @ <strong>Time:</strong> {c.hearingTime || "TBD"} ({c.duration || 30} Mins | Fee: ₹{c.consultationFee || 500})
+                            </p>
+                          </div>
+                        </div>
+
+                        {c.meetingLink && (
+                          <div className="gitter-action-bar">
+                            <span className="meeting-url-text">Gitter Room URL: <code>{c.meetingLink}</code></span>
+                            <a
+                              href={c.meetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="client-gitter-join-btn"
+                            >
+                              🎥 Join Gitter Online Hearing Room ➔
+                            </a>
+                          </div>
+                        )}
+
+                        {c.advocateNotes && (
+                          <div className="advocate-notes-box">
+                            <strong>📝 Advocate Notes &amp; Court Instructions:</strong>
+                            <p>{c.advocateNotes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* UPLOADED DOCUMENTS SECTION */}
                     <div className="documents-section">
@@ -459,6 +527,96 @@ function ClientDashboard() {
                         </p>
                       )}
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: BOOKED CONSULTATIONS & GITTER MEETING LINKS */}
+        {activeTab === "consultations" && (
+          <div className="tab-content">
+            {appointments.length === 0 ? (
+              <div className="empty-state">
+                <h3>No Booked Consultations Found</h3>
+                <p>When you select an advocate and request a consultation slot, your meeting schedule and Gitter links will appear here.</p>
+              </div>
+            ) : (
+              <div className="cases-list">
+                {appointments.map((appt) => (
+                  <div className="case-card appt-card" key={appt._id}>
+                    <div className="case-card-header">
+                      <div>
+                        <span className="case-category-badge">
+                          {appt.issue ? `Issue: ${appt.issue}` : "Legal Consultation"}
+                        </span>
+                        <h3 className="case-title">
+                          👨‍⚖ Advocate: {appt.advocate?.fullName || appt.advocate?.name || "Legal Advocate"}
+                        </h3>
+                        <p className="advocate-sub-contact">
+                          {appt.advocate?.specialization || "Legal Practice"} {appt.advocate?.email ? `| ✉ ${appt.advocate.email}` : ""} {appt.advocate?.phone ? `| 📞 ${appt.advocate.phone}` : ""}
+                        </p>
+                      </div>
+                      <span className={`status-badge status-${(appt.status || "Pending").toLowerCase().replace(/\s+/g, '-')}`}>
+                        {appt.status}
+                      </span>
+                    </div>
+
+                    <p className="case-description">
+                      <strong>Consultation Request Description:</strong> {appt.description || "No description provided."}
+                    </p>
+
+                    <div className="case-meta">
+                      <div className="meta-item">
+                        <strong>📅 Scheduled Date:</strong> {appt.appointmentDate || "Pending Allotment"}
+                      </div>
+                      <div className="meta-item">
+                        <strong>⏰ Scheduled Time:</strong> {appt.appointmentTime || "Pending Allotment"}
+                      </div>
+                      <div className="meta-item">
+                        <strong>⏱ Duration:</strong> {appt.duration || 30} Mins
+                      </div>
+                      <div className="meta-item">
+                        <strong>💵 Fee:</strong> ₹{appt.consultationFee || 0}
+                      </div>
+                    </div>
+
+                    {/* GITTER MEETING ROOM SECTION FOR APPROVED APPOINTMENTS */}
+                    {appt.status === "Approved" && (
+                      <div className="client-gitter-box">
+                        <div className="gitter-header">
+                          <span className="gitter-icon">💬</span>
+                          <div>
+                            <h4>Online Legal Consultation Room Ready!</h4>
+                            <p>Your advocate has approved this slot and generated an online Gitter consultation room.</p>
+                          </div>
+                        </div>
+
+                        {appt.meetingLink ? (
+                          <div className="gitter-action-bar">
+                            <span className="meeting-url-text">Room URL: <code>{appt.meetingLink}</code></span>
+                            <a
+                              href={appt.meetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="client-gitter-join-btn"
+                            >
+                              🎥 Join Gitter Meeting Room ➔
+                            </a>
+                          </div>
+                        ) : (
+                          <p className="no-link-text">Meeting link will be updated shortly by your advocate.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {appt.advocateNotes && (
+                      <div className="advocate-notes-box">
+                        <strong>📝 Advocate Notes &amp; Venue Instructions:</strong>
+                        <p>{appt.advocateNotes}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

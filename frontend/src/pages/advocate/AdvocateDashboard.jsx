@@ -12,33 +12,26 @@ import "./AdvocateDashboard.css";
 function AdvocateDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'appointments' | 'cases' | 'slots' | 'profile'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'cases' | 'appointments' | 'profile'
   const [appointments, setAppointments] = useState([]);
   const [cases, setCases] = useState([]);
-  const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
   const [statusFilterAppt, setStatusFilterAppt] = useState("All");
   const [statusFilterCase, setStatusFilterCase] = useState("All");
 
-  // Preferred Slots Management State
-  const [slotAddForm, setSlotAddForm] = useState({
-    date: new Date().toISOString().split("T")[0],
-    startTime: "10:00 AM",
-    endTime: "10:30 AM",
+  // Case Hearing Slot Allocation Modal State (Slot assigned directly under each case)
+  const [selectedCaseForSlot, setSelectedCaseForSlot] = useState(null);
+  const [caseSlotForm, setCaseSlotForm] = useState({
+    hearingDate: "",
+    hearingTime: "",
     duration: 30,
-    fee: 500,
+    consultationFee: 500,
+    meetingLink: "",
+    advocateNotes: "",
+    status: "Hearing Scheduled",
   });
-  const [autoGenForm, setAutoGenForm] = useState({
-    date: new Date().toISOString().split("T")[0],
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    slotDuration: 30,
-    fee: 500,
-  });
-  const [slotMsg, setSlotMsg] = useState("");
-  const [slotActionLoading, setSlotActionLoading] = useState(false);
 
   // Slot Assignment Modal State (for Consultation Request approval)
   const [selectedAppointment, setSelectedAppointment] = useState(null);
@@ -48,6 +41,7 @@ function AdvocateDashboard() {
     appointmentTime: "",
     duration: 30,
     consultationFee: "",
+    meetingLink: "",
     advocateNotes: "",
   });
 
@@ -80,7 +74,6 @@ function AdvocateDashboard() {
       const advId = parsedUser.id || parsedUser._id || parsedUser.user?.id || parsedUser.user?._id;
       if (advId) {
         fetchDashboardData(advId);
-        fetchAdvocateSlots(advId);
       }
     } catch (e) {
       navigate("/advocate-login");
@@ -118,87 +111,45 @@ function AdvocateDashboard() {
     }
   };
 
-  const fetchAdvocateSlots = async (advocateId) => {
-    try {
-      const res = await api.get(`/users/slots/${advocateId}`);
-      if (res.data.success) {
-        setSlots(res.data.availableSlots || []);
-      }
-    } catch (err) {
-      console.error("Error fetching slots:", err);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/");
   };
 
-  // Add Single Preferred Slot
-  const handleAddSlotSubmit = async (e) => {
+  // Open Case Hearing Slot Scheduling Modal
+  const openCaseSlotModal = (c) => {
+    setSelectedCaseForSlot(c);
+    const defaultGitter = `https://gitter.im/LegalConnect-Case-${c._id}`;
+    setCaseSlotForm({
+      hearingDate: c.hearingDate || new Date().toISOString().split("T")[0],
+      hearingTime: c.hearingTime || "10:00 AM",
+      duration: c.duration || 30,
+      consultationFee: c.consultationFee || user?.consultationFee || 500,
+      meetingLink: c.meetingLink || defaultGitter,
+      advocateNotes: c.advocateNotes || "",
+      status: c.status === "Pending" || c.status === "Assigned" ? "Hearing Scheduled" : c.status,
+    });
+  };
+
+  // Save Case Hearing Slot & Gitter Link
+  const handleSaveCaseSlotSubmit = async (e) => {
     e.preventDefault();
-    const advId = user?.id || user?._id;
-    if (!advId) return;
-
-    setSlotActionLoading(true);
-    setSlotMsg("");
+    if (!selectedCaseForSlot) return;
 
     try {
-      const res = await api.post(`/users/slots/${advId}/add`, slotAddForm);
+      const res = await api.put(`/complaints/${selectedCaseForSlot._id}`, caseSlotForm);
       if (res.data.success) {
-        setSlotMsg("Preferred booking slot added successfully!");
-        setSlots(res.data.slots || []);
-        setTimeout(() => setSlotMsg(""), 3000);
+        alert("Case Hearing Slot & Gitter Online Meeting Link Scheduled Successfully!");
+        setSelectedCaseForSlot(null);
+        fetchDashboardData(user.id || user._id);
       }
     } catch (err) {
-      setSlotMsg(err.response?.data?.message || "Failed to add slot.");
-    } finally {
-      setSlotActionLoading(false);
+      alert(err.response?.data?.message || "Failed to schedule case slot.");
     }
   };
 
-  // Auto Generate Daily Slots
-  const handleAutoGenSubmit = async (e) => {
-    e.preventDefault();
-    const advId = user?.id || user?._id;
-    if (!advId) return;
-
-    setSlotActionLoading(true);
-    setSlotMsg("");
-
-    try {
-      const res = await api.post(`/users/slots/${advId}/generate`, autoGenForm);
-      if (res.data.success) {
-        setSlotMsg(res.data.message || "Daily slots generated successfully!");
-        setSlots(res.data.slots || []);
-        setTimeout(() => setSlotMsg(""), 3000);
-      }
-    } catch (err) {
-      setSlotMsg(err.response?.data?.message || "Failed to generate slots.");
-    } finally {
-      setSlotActionLoading(false);
-    }
-  };
-
-  // Delete Unbooked Slot
-  const handleDeleteSlot = async (slotId) => {
-    const advId = user?.id || user?._id;
-    if (!advId) return;
-
-    if (!window.confirm("Are you sure you want to remove this available booking slot?")) return;
-
-    try {
-      const res = await api.delete(`/users/slots/${advId}/${slotId}`);
-      if (res.data.success) {
-        setSlots(res.data.slots || []);
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to remove slot.");
-    }
-  };
-
-  // Open Slot Allocation Modal
+  // Open Appointment Slot Allocation Modal
   const openSlotModal = (appointment) => {
     setSelectedAppointment(appointment);
     setSlotForm({
@@ -206,12 +157,13 @@ function AdvocateDashboard() {
       appointmentTime: appointment.appointmentTime || "",
       duration: appointment.duration || 30,
       consultationFee: appointment.consultationFee || user?.consultationFee || 500,
+      meetingLink: appointment.meetingLink || `https://gitter.im/LegalConnect-Consultation-${appointment._id}`,
       advocateNotes: appointment.advocateNotes || "",
     });
     setShowSlotModal(true);
   };
 
-  // Submit Slot Assignment
+  // Submit Appointment Slot Assignment
   const handleAssignSlotSubmit = async (e) => {
     e.preventDefault();
     if (!selectedAppointment) return;
@@ -223,7 +175,6 @@ function AdvocateDashboard() {
         setShowSlotModal(false);
         setSelectedAppointment(null);
         fetchDashboardData(user.id || user._id);
-        fetchAdvocateSlots(user.id || user._id);
       }
     } catch (err) {
       alert(err.response?.data?.message || "Failed to assign consultation slot.");
@@ -257,7 +208,7 @@ function AdvocateDashboard() {
     }
   };
 
-  // Update Case Status
+  // Update Case Status directly
   const handleUpdateCaseStatus = async (caseId, newStatus) => {
     try {
       const res = await api.put(`/complaints/${caseId}`, { status: newStatus });
@@ -353,10 +304,7 @@ function AdvocateDashboard() {
   });
 
   const pendingRequestsCount = appointments.filter((a) => a.status === "Pending").length;
-  const approvedRequestsCount = appointments.filter((a) => a.status === "Approved").length;
-  const completedRequestsCount = appointments.filter((a) => a.status === "Completed").length;
-  const openSlotsCount = slots.filter((s) => !s.isBooked).length;
-  const bookedSlotsCount = slots.filter((s) => s.isBooked).length;
+  const scheduledCasesCount = cases.filter((c) => c.hearingDate || c.status === "Hearing Scheduled").length;
 
   return (
     <div className="adv-dashboard-wrapper">
@@ -394,27 +342,23 @@ function AdvocateDashboard() {
       {/* HERO BANNER */}
       <section className="adv-hero-banner">
         <div className="adv-hero-content">
-          <h1>Advocate Consultation &amp; Preferred Slot Booking Portal</h1>
+          <h1>Advocate Case Management &amp; Hearing Slot Portal</h1>
           <p>
-            Set your preferred booking slots, define working hours, review client consultation requests, access case documents, and update hearing progress in real-time.
+            Schedule hearing slots and Gitter online consultation rooms directly under each assigned case, review client case files, and update progress in real-time.
           </p>
 
           <div className="adv-stats-row">
             <div className="adv-stat-box">
-              <span className="adv-stat-val">{openSlotsCount}</span>
-              <span className="adv-stat-lbl">Open Preferred Slots</span>
+              <span className="adv-stat-val">{cases.length}</span>
+              <span className="adv-stat-lbl">Assigned Cases</span>
             </div>
             <div className="adv-stat-box">
-              <span className="adv-stat-val">{bookedSlotsCount}</span>
-              <span className="adv-stat-lbl">Booked Client Slots</span>
+              <span className="adv-stat-val">{scheduledCasesCount}</span>
+              <span className="adv-stat-lbl">Scheduled Hearing Slots</span>
             </div>
             <div className="adv-stat-box warning-box">
               <span className="adv-stat-val">{pendingRequestsCount}</span>
               <span className="adv-stat-lbl">Pending Requests</span>
-            </div>
-            <div className="adv-stat-box">
-              <span className="adv-stat-val">{cases.length}</span>
-              <span className="adv-stat-lbl">Assigned Cases</span>
             </div>
             <div className="adv-stat-box">
               <span className="adv-stat-val">
@@ -437,10 +381,10 @@ function AdvocateDashboard() {
           </button>
 
           <button
-            className={`adv-tab-btn ${activeTab === "slots" ? "active" : ""}`}
-            onClick={() => setActiveTab("slots")}
+            className={`adv-tab-btn ${activeTab === "cases" ? "active" : ""}`}
+            onClick={() => setActiveTab("cases")}
           >
-            📅 Preferred Slots &amp; Availability ({openSlotsCount} Open)
+            📂 Assigned Cases &amp; Hearing Slots ({cases.length})
           </button>
 
           <button
@@ -448,13 +392,6 @@ function AdvocateDashboard() {
             onClick={() => setActiveTab("appointments")}
           >
             📋 Consultation Requests ({appointments.length})
-          </button>
-
-          <button
-            className={`adv-tab-btn ${activeTab === "cases" ? "active" : ""}`}
-            onClick={() => setActiveTab("cases")}
-          >
-            📂 Assigned Cases &amp; Documents ({cases.length})
           </button>
 
           <button
@@ -483,18 +420,18 @@ function AdvocateDashboard() {
                 <div className="adv-overview-grid">
                   <div className="adv-overview-card highlight-card">
                     <div className="card-icon-header">
-                      <span className="card-emoji">📅</span>
-                      <h4>Preferred Booking Slots</h4>
+                      <span className="card-emoji">📂</span>
+                      <h4>Assigned Cases &amp; Slots</h4>
                     </div>
-                    <p className="card-big-number">{openSlotsCount} Open</p>
+                    <p className="card-big-number">{cases.length} Cases</p>
                     <p className="card-subtext">
-                      {bookedSlotsCount} slots already booked by clients. Set your preferred consultation times.
+                      {scheduledCasesCount} cases have scheduled hearing slots and Gitter rooms.
                     </p>
                     <button
                       className="adv-card-action-btn gold-btn"
-                      onClick={() => setActiveTab("slots")}
+                      onClick={() => setActiveTab("cases")}
                     >
-                      + Manage Preferred Slots &amp; Hours →
+                      Manage Case Slots &amp; Documents →
                     </button>
                   </div>
 
@@ -505,7 +442,7 @@ function AdvocateDashboard() {
                     </div>
                     <p className="card-big-number">{pendingRequestsCount}</p>
                     <p className="card-subtext">
-                      Client appointment requests waiting for slot allotment
+                      Direct client appointment requests waiting for slot allotment
                     </p>
                     <button
                       className="adv-card-action-btn"
@@ -517,216 +454,185 @@ function AdvocateDashboard() {
 
                   <div className="adv-overview-card">
                     <div className="card-icon-header">
-                      <span className="card-emoji">📂</span>
-                      <h4>Active Legal Cases</h4>
+                      <span className="card-emoji">👤</span>
+                      <h4>Advocate Credentials</h4>
                     </div>
-                    <p className="card-big-number">{cases.length}</p>
+                    <p className="card-big-number">₹{user?.consultationFee || 500}</p>
                     <p className="card-subtext">
-                      Registered complaints &amp; files assigned by clients
+                      Default fee | {user?.specialization || "General Practice"}
                     </p>
                     <button
                       className="adv-card-action-btn"
-                      onClick={() => setActiveTab("cases")}
+                      onClick={() => setActiveTab("profile")}
                     >
-                      Manage Assigned Cases →
+                      View &amp; Edit Profile →
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* PREFERRED SLOTS MANAGEMENT TAB */}
-            {activeTab === "slots" && (
+            {/* ASSIGNED CASES & CASE-BOUND HEARING SLOTS TAB */}
+            {activeTab === "cases" && (
               <div className="adv-section">
                 <div className="section-header-row">
                   <div>
-                    <h3 className="section-title">📅 Manage Preferred Available Booking Slots</h3>
+                    <h3 className="section-title">📂 Assigned Client Cases &amp; Hearing Slots</h3>
                     <p className="section-subtitle">
-                      Set your preferred consultation dates, start times, and end times. Clients can view and reserve these published slots directly.
+                      Assign hearing dates, times, advocate notes, and Gitter meeting links directly under each client case.
                     </p>
                   </div>
+                  <div className="filter-controls">
+                    <label>Filter Case Status:</label>
+                    <select
+                      className="adv-select"
+                      value={statusFilterCase}
+                      onChange={(e) => setStatusFilterCase(e.target.value)}
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Assigned">Assigned</option>
+                      <option value="Hearing Scheduled">Hearing Scheduled</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Under Review">Under Review</option>
+                      <option value="Resolved">Resolved</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
                 </div>
 
-                {slotMsg && (
-                  <div className={slotMsg.includes("Failed") || slotMsg.includes("Error") ? "adv-error-banner" : "adv-success-banner"}>
-                    {slotMsg}
+                {filteredCases.length === 0 ? (
+                  <div className="adv-empty-state">
+                    <h3>No Cases Assigned Yet</h3>
+                    <p>When clients select you as their advocate, their cases will appear here for hearing slot assignment.</p>
                   </div>
-                )}
-
-                <div className="slots-creation-row">
-                  {/* FORM 1: ADD SINGLE PREFERRED SLOT */}
-                  <div className="slot-form-card">
-                    <h4>➕ Add Custom Booking Slot</h4>
-                    <form onSubmit={handleAddSlotSubmit} className="slot-mini-form">
-                      <div className="input-group">
-                        <label>Slot Date *</label>
-                        <input
-                          type="date"
-                          value={slotAddForm.date}
-                          onChange={(e) => setSlotAddForm({ ...slotAddForm, date: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="input-group-row">
-                        <div className="input-group">
-                          <label>Start Time *</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 10:00 AM"
-                            value={slotAddForm.startTime}
-                            onChange={(e) => setSlotAddForm({ ...slotAddForm, startTime: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div className="input-group">
-                          <label>End Time *</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 10:30 AM"
-                            value={slotAddForm.endTime}
-                            onChange={(e) => setSlotAddForm({ ...slotAddForm, endTime: e.target.value })}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="input-group-row">
-                        <div className="input-group">
-                          <label>Duration (Mins)</label>
-                          <input
-                            type="number"
-                            value={slotAddForm.duration}
-                            onChange={(e) => setSlotAddForm({ ...slotAddForm, duration: e.target.value })}
-                          />
-                        </div>
-                        <div className="input-group">
-                          <label>Fee (₹)</label>
-                          <input
-                            type="number"
-                            value={slotAddForm.fee}
-                            onChange={(e) => setSlotAddForm({ ...slotAddForm, fee: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <button type="submit" className="submit-btn" disabled={slotActionLoading}>
-                        {slotActionLoading ? "Adding..." : "+ Publish Booking Slot"}
-                      </button>
-                    </form>
-                  </div>
-
-                  {/* FORM 2: AUTO-GENERATE DAILY SLOTS */}
-                  <div className="slot-form-card auto-gen-card">
-                    <h4>⚡ Auto-Generate Daily Slots</h4>
-                    <p className="form-sub-desc">Automatically create consecutive consultation slots for a full day based on your working schedule.</p>
-
-                    <form onSubmit={handleAutoGenSubmit} className="slot-mini-form">
-                      <div className="input-group">
-                        <label>Target Date *</label>
-                        <input
-                          type="date"
-                          value={autoGenForm.date}
-                          onChange={(e) => setAutoGenForm({ ...autoGenForm, date: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="input-group-row">
-                        <div className="input-group">
-                          <label>Day Start Time</label>
-                          <input
-                            type="text"
-                            value={autoGenForm.startTime}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, startTime: e.target.value })}
-                          />
-                        </div>
-                        <div className="input-group">
-                          <label>Day End Time</label>
-                          <input
-                            type="text"
-                            value={autoGenForm.endTime}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, endTime: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="input-group-row">
-                        <div className="input-group">
-                          <label>Slot Size (Mins)</label>
-                          <select
-                            value={autoGenForm.slotDuration}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, slotDuration: e.target.value })}
+                ) : (
+                  <div className="adv-cases-list">
+                    {filteredCases.map((c) => (
+                      <div className="adv-case-card" key={c._id}>
+                        <div className="adv-case-card-header">
+                          <div>
+                            <span className="category-badge">{c.category}</span>
+                            <h3 className="case-title">{c.title}</h3>
+                            <p className="case-client-info">
+                              👤 Client: <strong>{c.user?.fullName || c.user?.name || "Client"}</strong> ({c.user?.email || "No Email"} {c.user?.phone ? `| 📞 ${c.user.phone}` : ""})
+                            </p>
+                          </div>
+                          <span
+                            className={`status-badge status-${(c.status || "Assigned")
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
                           >
-                            <option value="15">15 Minutes</option>
-                            <option value="30">30 Minutes</option>
-                            <option value="45">45 Minutes</option>
-                            <option value="60">60 Minutes</option>
-                          </select>
+                            {c.status}
+                          </span>
                         </div>
-                        <div className="input-group">
-                          <label>Consultation Fee (₹)</label>
-                          <input
-                            type="number"
-                            value={autoGenForm.fee}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, fee: e.target.value })}
-                          />
-                        </div>
-                      </div>
 
-                      <button type="submit" className="submit-btn gold-btn" disabled={slotActionLoading}>
-                        {slotActionLoading ? "Generating..." : "⚡ Generate Day Slots"}
-                      </button>
-                    </form>
-                  </div>
-                </div>
+                        <p className="case-description">{c.description}</p>
 
-                {/* DISPLAY PUBLISHED SLOTS */}
-                <div className="published-slots-container">
-                  <h4 className="sub-title">📋 Published Booking Slots ({slots.length})</h4>
-
-                  {slots.length === 0 ? (
-                    <div className="adv-empty-state">
-                      <h3>No Preferred Slots Published Yet</h3>
-                      <p>Use the forms above to set your preferred booking times for clients.</p>
-                    </div>
-                  ) : (
-                    <div className="slots-grid">
-                      {slots.map((s) => (
-                        <div className={`slot-chip-card ${s.isBooked ? "booked-slot" : "available-slot"}`} key={s.slotId}>
-                          <div className="slot-chip-header">
-                            <span className="slot-date">📅 {s.date}</span>
-                            <span className={`slot-status-pill ${s.isBooked ? "status-booked" : "status-open"}`}>
-                              {s.isBooked ? "Booked" : "Open for Booking"}
-                            </span>
-                          </div>
-
-                          <div className="slot-time">
-                            ⏰ {s.startTime} - {s.endTime} ({s.duration} Mins)
-                          </div>
-
-                          <div className="slot-fee">
-                            <strong>Fee:</strong> ₹{s.fee}
-                          </div>
-
-                          {!s.isBooked ? (
+                        {/* CASE-BOUND HEARING & CONSULTATION SLOT DISPLAY */}
+                        <div className="case-slot-display-box">
+                          <div className="slot-box-header">
+                            <h4>📅 Assigned Hearing &amp; Consultation Slot</h4>
                             <button
-                              className="delete-slot-btn"
-                              onClick={() => handleDeleteSlot(s.slotId)}
-                              title="Delete Slot"
+                              className="schedule-slot-btn"
+                              onClick={() => openCaseSlotModal(c)}
                             >
-                              🗑 Remove Slot
+                              ✏ {c.hearingDate ? "Edit Hearing Slot & Gitter Link" : "+ Schedule Hearing Slot & Gitter Link"}
                             </button>
+                          </div>
+
+                          {c.hearingDate ? (
+                            <div className="slot-details-content">
+                              <div className="slot-meta-row">
+                                <span>📅 <strong>Hearing Date:</strong> {c.hearingDate}</span>
+                                <span>⏰ <strong>Time:</strong> {c.hearingTime || "TBD"}</span>
+                                <span>⏱ <strong>Duration:</strong> {c.duration || 30} Mins</span>
+                                <span>💵 <strong>Fee:</strong> ₹{c.consultationFee || 500}</span>
+                              </div>
+
+                              {c.meetingLink && (
+                                <div className="meeting-link-row">
+                                  <span>💬 <strong>Gitter Room:</strong> <code>{c.meetingLink}</code></span>
+                                  <a
+                                    href={c.meetingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="gitter-link-btn"
+                                  >
+                                    🎥 Open Gitter Room ➔
+                                  </a>
+                                </div>
+                              )}
+
+                              {c.advocateNotes && (
+                                <p className="slot-notes-text">
+                                  <strong>📝 Notes:</strong> {c.advocateNotes}
+                                </p>
+                              )}
+                            </div>
                           ) : (
-                            <p className="booked-by-tag">
-                              👤 Reserved by Client
+                            <p className="no-slot-scheduled">
+                              No hearing slot scheduled yet for this case. Click <strong>'+ Schedule Hearing Slot &amp; Gitter Link'</strong> to fix a time for the client.
                             </p>
                           )}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+
+                        <div className="case-status-update-bar">
+                          <label><strong>Quick Update Case Status:</strong></label>
+                          <select
+                            value={c.status}
+                            onChange={(e) => handleUpdateCaseStatus(c._id, e.target.value)}
+                          >
+                            <option value="Assigned">Assigned</option>
+                            <option value="Hearing Scheduled">Hearing Scheduled</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Under Review">Under Review</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Closed">Closed</option>
+                          </select>
+                        </div>
+
+                        {/* CASE DOCUMENTS SECTION */}
+                        <div className="documents-section">
+                          <div className="documents-header">
+                            <h4>📄 Attached Case Legal Documents ({c.documents?.length || 0})</h4>
+                            <button
+                              className="upload-doc-btn"
+                              onClick={() => setSelectedCaseForUpload(c)}
+                            >
+                              + Attach Legal Response File
+                            </button>
+                          </div>
+
+                          {c.documents && c.documents.length > 0 ? (
+                            <div className="document-chips">
+                              {c.documents.map((doc, idx) => (
+                                <div className="doc-chip" key={idx}>
+                                  <span className="doc-icon">📎</span>
+                                  <div className="doc-details">
+                                    <a
+                                      href={doc.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="doc-name"
+                                      download={doc.name}
+                                    >
+                                      {doc.name}
+                                    </a>
+                                    <span className="doc-size">{doc.size || "File"}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="no-docs-text">
+                              No document files attached yet. Click above to attach legal responses.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -734,7 +640,7 @@ function AdvocateDashboard() {
             {activeTab === "appointments" && (
               <div className="adv-section">
                 <div className="section-header-row">
-                  <h3 className="section-title">📋 Client Consultation Requests &amp; Slot Allotments</h3>
+                  <h3 className="section-title">📋 Direct Consultation Requests</h3>
                   <div className="filter-controls">
                     <label>Filter Status:</label>
                     <select
@@ -753,7 +659,7 @@ function AdvocateDashboard() {
 
                 {filteredAppointments.length === 0 ? (
                   <div className="adv-empty-state">
-                    <h3>No Consultation Requests Found</h3>
+                    <h3>No Direct Consultation Requests Found</h3>
                     <p>There are no appointment requests matching your filter.</p>
                   </div>
                 ) : (
@@ -785,13 +691,6 @@ function AdvocateDashboard() {
                           <strong>Description:</strong> {appt.description || "No description provided."}
                         </p>
 
-                        {/* PREFERRED REQUESTED TIME IF AVAILABLE */}
-                        {appt.appointmentDate && (
-                          <div className="preferred-time-badge">
-                            📅 <strong>Requested Slot:</strong> {appt.appointmentDate} @ {appt.appointmentTime || "TBD"} (₹{appt.consultationFee || 500})
-                          </div>
-                        )}
-
                         {/* SLOT DETAILS IF APPROVED */}
                         {appt.status === "Approved" && (
                           <div className="slot-info-box">
@@ -799,6 +698,19 @@ function AdvocateDashboard() {
                             <p><strong>⏰ Time:</strong> {appt.appointmentTime || "TBD"}</p>
                             <p><strong>⏱ Duration:</strong> {appt.duration || 30} Mins</p>
                             <p><strong>💵 Consultation Fee:</strong> ₹{appt.consultationFee || 0}</p>
+                            {appt.meetingLink && (
+                              <div className="meeting-link-row">
+                                <span>💬 <strong>Gitter Room:</strong></span>
+                                <a
+                                  href={appt.meetingLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="gitter-link-btn"
+                                >
+                                  🎥 Join Gitter Room ➔
+                                </a>
+                              </div>
+                            )}
                             {appt.advocateNotes && (
                               <p><strong>📝 Notes:</strong> {appt.advocateNotes}</p>
                             )}
@@ -838,122 +750,6 @@ function AdvocateDashboard() {
                                 ✏ Edit Allotment
                               </button>
                             </div>
-                          )}
-
-                          {(appt.status === "Completed" || appt.status === "Rejected") && (
-                            <p className="status-note">
-                              This request has been finalized as <strong>{appt.status}</strong>.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ASSIGNED CASES & DOCUMENTS TAB */}
-            {activeTab === "cases" && (
-              <div className="adv-section">
-                <div className="section-header-row">
-                  <h3 className="section-title">📂 Assigned Client Cases &amp; Document Files</h3>
-                  <div className="filter-controls">
-                    <label>Filter Case Status:</label>
-                    <select
-                      className="adv-select"
-                      value={statusFilterCase}
-                      onChange={(e) => setStatusFilterCase(e.target.value)}
-                    >
-                      <option value="All">All Statuses</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Assigned">Assigned</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Hearing Scheduled">Hearing Scheduled</option>
-                      <option value="Resolved">Resolved</option>
-                      <option value="Closed">Closed</option>
-                    </select>
-                  </div>
-                </div>
-
-                {filteredCases.length === 0 ? (
-                  <div className="adv-empty-state">
-                    <h3>No Cases Assigned Yet</h3>
-                    <p>When clients select you as their advocate, their cases will appear here.</p>
-                  </div>
-                ) : (
-                  <div className="adv-cases-list">
-                    {filteredCases.map((c) => (
-                      <div className="adv-case-card" key={c._id}>
-                        <div className="adv-case-card-header">
-                          <div>
-                            <span className="category-badge">{c.category}</span>
-                            <h3 className="case-title">{c.title}</h3>
-                            <p className="case-client-info">
-                              👤 Client: <strong>{c.user?.fullName || c.user?.name || "Client"}</strong> ({c.user?.email || "No Email"} {c.user?.phone ? `| 📞 ${c.user.phone}` : ""})
-                            </p>
-                          </div>
-                          <span
-                            className={`status-badge status-${(c.status || "Assigned")
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                          >
-                            {c.status}
-                          </span>
-                        </div>
-
-                        <p className="case-description">{c.description}</p>
-
-                        <div className="case-status-update-bar">
-                          <label><strong>Update Status:</strong></label>
-                          <select
-                            value={c.status}
-                            onChange={(e) => handleUpdateCaseStatus(c._id, e.target.value)}
-                          >
-                            <option value="Assigned">Assigned</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Hearing Scheduled">Hearing Scheduled</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Closed">Closed</option>
-                          </select>
-                        </div>
-
-                        {/* CASE DOCUMENTS SECTION */}
-                        <div className="documents-section">
-                          <div className="documents-header">
-                            <h4>📄 Attached Legal Documents ({c.documents?.length || 0})</h4>
-                            <button
-                              className="upload-doc-btn"
-                              onClick={() => setSelectedCaseForUpload(c)}
-                            >
-                              + Attach Advocate Response File
-                            </button>
-                          </div>
-
-                          {c.documents && c.documents.length > 0 ? (
-                            <div className="document-chips">
-                              {c.documents.map((doc, idx) => (
-                                <div className="doc-chip" key={idx}>
-                                  <span className="doc-icon">📎</span>
-                                  <div className="doc-details">
-                                    <a
-                                      href={doc.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="doc-name"
-                                      download={doc.name}
-                                    >
-                                      {doc.name}
-                                    </a>
-                                    <span className="doc-size">{doc.size || "File"}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="no-docs-text">
-                              No document files attached yet. Click above to attach legal responses.
-                            </p>
                           )}
                         </div>
                       </div>
@@ -1032,7 +828,146 @@ function AdvocateDashboard() {
         )}
       </main>
 
-      {/* SLOT ALLOCATION MODAL */}
+      {/* CASE HEARING SLOT ALLOCATION MODAL */}
+      {selectedCaseForSlot && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Schedule Case Hearing Slot &amp; Gitter Link</h2>
+              <button
+                className="modal-close"
+                onClick={() => setSelectedCaseForSlot(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="modal-subtitle">
+              Case: <strong>{selectedCaseForSlot.title}</strong> | Client: {selectedCaseForSlot.user?.fullName || selectedCaseForSlot.user?.name}
+            </p>
+
+            <form onSubmit={handleSaveCaseSlotSubmit} className="modal-form">
+              <div className="input-group">
+                <label>Hearing / Consultation Date *</label>
+                <input
+                  type="date"
+                  value={caseSlotForm.hearingDate}
+                  onChange={(e) =>
+                    setCaseSlotForm({ ...caseSlotForm, hearingDate: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Hearing / Consultation Time *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 10:30 AM"
+                  value={caseSlotForm.hearingTime}
+                  onChange={(e) =>
+                    setCaseSlotForm({ ...caseSlotForm, hearingTime: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="input-group-row">
+                <div className="input-group">
+                  <label>Duration (Mins)</label>
+                  <input
+                    type="number"
+                    value={caseSlotForm.duration}
+                    onChange={(e) =>
+                      setCaseSlotForm({ ...caseSlotForm, duration: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Consultation Fee (₹)</label>
+                  <input
+                    type="number"
+                    value={caseSlotForm.consultationFee}
+                    onChange={(e) =>
+                      setCaseSlotForm({ ...caseSlotForm, consultationFee: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Gitter Online Meeting Room Link (Shared with Client)</label>
+                <div className="input-with-button-row">
+                  <input
+                    type="text"
+                    placeholder="https://gitter.im/LegalConnect-Case-Room"
+                    value={caseSlotForm.meetingLink}
+                    onChange={(e) =>
+                      setCaseSlotForm({ ...caseSlotForm, meetingLink: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="auto-gen-link-btn"
+                    onClick={() => {
+                      setCaseSlotForm({
+                        ...caseSlotForm,
+                        meetingLink: `https://gitter.im/LegalConnect-Case-${selectedCaseForSlot._id}`,
+                      });
+                    }}
+                  >
+                    ⚡ Auto-Generate Gitter Link
+                  </button>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Case Status</label>
+                <select
+                  value={caseSlotForm.status}
+                  onChange={(e) =>
+                    setCaseSlotForm({ ...caseSlotForm, status: e.target.value })
+                  }
+                >
+                  <option value="Assigned">Assigned</option>
+                  <option value="Hearing Scheduled">Hearing Scheduled</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Under Review">Under Review</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label>Advocate Notes &amp; Court/Venue Instructions</label>
+                <textarea
+                  rows="3"
+                  value={caseSlotForm.advocateNotes}
+                  onChange={(e) =>
+                    setCaseSlotForm({ ...caseSlotForm, advocateNotes: e.target.value })
+                  }
+                  placeholder="Enter hearing instructions, required documents to bring, or meeting details for client..."
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setSelectedCaseForSlot(null)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Save Hearing Slot &amp; Gitter Link
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* APPOINTMENT SLOT ALLOCATION MODAL */}
       {showSlotModal && (
         <div className="modal-overlay">
           <div className="modal-card">
@@ -1048,39 +983,6 @@ function AdvocateDashboard() {
                 ✕
               </button>
             </div>
-
-            <p className="modal-subtitle">
-              Client: <strong>{selectedAppointment?.client?.fullName || selectedAppointment?.client?.name}</strong> | Issue: {selectedAppointment?.issue}
-            </p>
-
-            {/* IF ADVOCATE HAS PUBLISHED PREFERRED SLOTS, SHOW QUICK SELECTOR */}
-            {slots.filter((s) => !s.isBooked).length > 0 && (
-              <div className="quick-slot-picker">
-                <label><strong>Quick Select from Your Published Preferred Slots:</strong></label>
-                <div className="quick-slot-chips">
-                  {slots
-                    .filter((s) => !s.isBooked)
-                    .map((s) => (
-                      <button
-                        type="button"
-                        key={s.slotId}
-                        className="quick-slot-btn"
-                        onClick={() => {
-                          setSlotForm({
-                            ...slotForm,
-                            appointmentDate: s.date,
-                            appointmentTime: s.startTime,
-                            duration: s.duration,
-                            consultationFee: s.fee,
-                          });
-                        }}
-                      >
-                        📅 {s.date} @ {s.startTime} (₹{s.fee})
-                      </button>
-                    ))}
-                </div>
-              </div>
-            )}
 
             <form onSubmit={handleAssignSlotSubmit} className="modal-form">
               <div className="input-group">
@@ -1109,39 +1011,29 @@ function AdvocateDashboard() {
               </div>
 
               <div className="input-group">
-                <label>Consultation Duration (Minutes)</label>
-                <input
-                  type="number"
-                  value={slotForm.duration}
-                  onChange={(e) =>
-                    setSlotForm({ ...slotForm, duration: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="input-group">
-                <label>Consultation Fee (₹)</label>
-                <input
-                  type="number"
-                  value={slotForm.consultationFee}
-                  onChange={(e) =>
-                    setSlotForm({ ...slotForm, consultationFee: e.target.value })
-                  }
-                  placeholder="e.g. 500"
-                />
-              </div>
-
-              <div className="input-group">
-                <label>Advocate Instructions / Meeting Venue / Video Link</label>
-                <textarea
-                  rows="3"
-                  value={slotForm.advocateNotes}
-                  onChange={(e) =>
-                    setSlotForm({ ...slotForm, advocateNotes: e.target.value })
-                  }
-                  placeholder="Instructions for client regarding video meeting link, chamber location, or required documents..."
-                />
+                <label>Gitter Online Meeting Room Link</label>
+                <div className="input-with-button-row">
+                  <input
+                    type="text"
+                    value={slotForm.meetingLink}
+                    onChange={(e) =>
+                      setSlotForm({ ...slotForm, meetingLink: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="auto-gen-link-btn"
+                    onClick={() => {
+                      const apptId = selectedAppointment?._id || Date.now();
+                      setSlotForm({
+                        ...slotForm,
+                        meetingLink: `https://gitter.im/LegalConnect-Consultation-${apptId}`,
+                      });
+                    }}
+                  >
+                    ⚡ Auto-Generate Gitter Link
+                  </button>
+                </div>
               </div>
 
               <div className="modal-actions">
@@ -1257,17 +1149,6 @@ function AdvocateDashboard() {
               </div>
 
               <div className="input-group">
-                <label>Phone Number</label>
-                <input
-                  type="text"
-                  value={profileForm.phone}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, phone: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="input-group">
                 <label>Legal Specialization</label>
                 <select
                   value={profileForm.specialization}
@@ -1287,47 +1168,6 @@ function AdvocateDashboard() {
                   <option value="Corporate Law">Corporate Law</option>
                   <option value="General Legal Practice">General Legal Practice</option>
                 </select>
-              </div>
-
-              <div className="input-group">
-                <label>Default Consultation Fee (₹)</label>
-                <input
-                  type="number"
-                  value={profileForm.consultationFee}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      consultationFee: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="input-group">
-                <label>Office Address / Chamber Location</label>
-                <input
-                  type="text"
-                  value={profileForm.officeAddress}
-                  onChange={(e) =>
-                    setProfileForm({
-                      ...profileForm,
-                      officeAddress: e.target.value,
-                    })
-                  }
-                  placeholder="e.g. High Court Complex, Chamber 402"
-                />
-              </div>
-
-              <div className="input-group">
-                <label>Professional Bio &amp; Overview</label>
-                <textarea
-                  rows="4"
-                  value={profileForm.bio}
-                  onChange={(e) =>
-                    setProfileForm({ ...profileForm, bio: e.target.value })
-                  }
-                  placeholder="Describe your legal background, key victories, court experience..."
-                />
               </div>
 
               <div className="modal-actions">

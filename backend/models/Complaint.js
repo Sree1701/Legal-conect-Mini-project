@@ -61,6 +61,37 @@ const complaintSchema = new mongoose.Schema(
             "Closed"
         ],
         default: "Pending"
+    },
+
+    // CASE-BOUND HEARING & CONSULTATION SLOT FIELDS
+    hearingDate: {
+        type: String,
+        default: ""
+    },
+
+    hearingTime: {
+        type: String,
+        default: ""
+    },
+
+    duration: {
+        type: Number,
+        default: 30
+    },
+
+    consultationFee: {
+        type: Number,
+        default: 500
+    },
+
+    meetingLink: {
+        type: String,
+        default: ""
+    },
+
+    advocateNotes: {
+        type: String,
+        default: ""
     }
 
 },

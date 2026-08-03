@@ -741,6 +741,76 @@
   font-weight: 700;
 }
 
+/* CASE-BOUND HEARING SLOT DISPLAY */
+.case-slot-display-box {
+  background: #f0f9ff;
+  border: 1.5px solid #0B4F75;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.slot-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slot-box-header h4 {
+  font-size: 15.5px;
+  color: #0B4F75;
+  font-weight: 700;
+}
+
+.schedule-slot-btn {
+  background: #FFD54F;
+  color: #0B4F75;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 213, 79, 0.3);
+}
+
+.schedule-slot-btn:hover {
+  background: #ffca28;
+}
+
+.slot-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slot-meta-row {
+  display: flex;
+  gap: 20px;
+  font-size: 13.5px;
+  color: #1e293b;
+  flex-wrap: wrap;
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+}
+
+.slot-notes-text {
+  font-size: 13px;
+  color: #475569;
+}
+
+.no-slot-scheduled {
+  font-size: 13.5px;
+  color: #64748b;
+  font-style: italic;
+}
+
 .case-client-info {
   font-size: 13.5px;
   color: #64748b;
@@ -1194,4 +1264,61 @@
   .adv-cards-grid, .adv-overview-grid, .slots-creation-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* GITTER MEETING LINK STYLES */
+.input-with-button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.input-with-button-row input {
+  flex: 1;
+}
+
+.auto-gen-link-btn {
+  background: #FFD54F;
+  color: #0B4F75;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.auto-gen-link-btn:hover {
+  background: #ffca28;
+}
+
+.meeting-link-row {
+  background: #eef5fb;
+  border: 1px solid #bae6fd;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gitter-link-btn {
+  background: #0B4F75;
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.gitter-link-btn:hover {
+  background: #083B59;
 }

@@ -175,6 +175,7 @@ exports.assignSlot = async (req, res) => {
             appointmentTime,
             duration,
             consultationFee,
+            meetingLink,
             advocateNotes
 
         } = req.body;
@@ -206,6 +207,8 @@ exports.assignSlot = async (req, res) => {
         appointment.duration = duration;
 
         appointment.consultationFee = consultationFee;
+
+        if (meetingLink !== undefined) appointment.meetingLink = meetingLink;
 
         appointment.advocateNotes = advocateNotes;
 
