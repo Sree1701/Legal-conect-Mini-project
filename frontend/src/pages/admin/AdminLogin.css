@@ -7,7 +7,10 @@
 }
 
 .admin-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #f1f5f9;
   color: #0f172a;
   padding: 6px 16px;
@@ -17,6 +20,15 @@
   letter-spacing: 0.5px;
   margin-bottom: 12px;
   border: 1px solid #cbd5e1;
+}
+
+.admin-header-logo-image {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 3px;
 }
 
 .admin-default-info-banner {

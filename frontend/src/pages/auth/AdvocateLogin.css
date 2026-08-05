@@ -15,7 +15,10 @@
 }
 
 .advocate-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #FFD54F;
   color: #0B4F75;
   padding: 6px 18px;

@@ -8,7 +8,10 @@
 }
 
 .otp-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #eef5fb;
   color: #0B4F75;
   padding: 6px 16px;

@@ -40,7 +40,10 @@
 }
 
 .auth-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: #eef5fb;
   color: #0B4F75;
   padding: 6px 16px;
@@ -50,6 +53,14 @@
   letter-spacing: 0.5px;
   margin-bottom: 12px;
   border: 1px solid rgba(11, 79, 117, 0.15);
+}
+
+.auth-badge-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .auth-header h2 {
