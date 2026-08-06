@@ -369,14 +369,9 @@ function ClientDashboard() {
             className={`tab-btn ${activeTab === "consultations" ? "active" : ""}`}
             onClick={() => setActiveTab("consultations")}
           >
-            💬 Booked Consultations &amp; Gitter Links ({appointments.length})
+            💬 Booked Consultations({appointments.length})
           </button>
-          <button
-            className={`tab-btn ai-tab-highlight ${activeTab === "ai-assistant" ? "active" : ""}`}
-            onClick={() => setActiveTab("ai-assistant")}
-          >
-            🤖 Legal AI Assistant
-          </button>
+          
           <button
             className="action-btn-gold"
             onClick={() => openNewCaseModal()}
