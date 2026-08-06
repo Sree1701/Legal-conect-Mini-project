@@ -11,6 +11,7 @@ const userRoutes = require("./routes/userRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/ai", aiRoutes);
 
 const PORT = process.env.PORT || 5000;
 
