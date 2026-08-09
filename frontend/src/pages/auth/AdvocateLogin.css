@@ -5,13 +5,13 @@
 @import "./Login.css";
 
 .advocate-bg {
-  background: linear-gradient(135deg, rgba(11, 79, 117, 0.08) 0%, rgba(255, 213, 79, 0.08) 100%), #f4f8fc;
+  background: linear-gradient(135deg, rgba(23, 42, 70, 0.05) 0%, rgba(201, 162, 39, 0.08) 100%), #F7F5EF;
 }
 
 .advocate-card {
-  border-top: 5px solid #FFD54F;
-  border-left: 1px solid rgba(11, 79, 117, 0.1);
-  border-right: 1px solid rgba(11, 79, 117, 0.1);
+  border-top: 5px solid #C9A227;
+  border-left: 1px solid #D9D6CC;
+  border-right: 1px solid #D9D6CC;
 }
 
 .advocate-badge {
@@ -19,20 +19,20 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #FFD54F;
-  color: #0B4F75;
+  background: #C9A227;
+  color: #172A46;
   padding: 6px 18px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
-  box-shadow: 0 3px 8px rgba(255, 213, 79, 0.3);
+  box-shadow: 0 3px 8px rgba(201, 162, 39, 0.25);
 }
 
 .advocate-benefits-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #F7F5EF;
+  border: 1px solid #D9D6CC;
   border-radius: 10px;
   padding: 14px 18px;
   margin-bottom: 22px;
@@ -43,7 +43,7 @@
 
 .benefit-item {
   font-size: 13px;
-  color: #334155;
+  color: #202733;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -51,25 +51,25 @@
 }
 
 .benefit-icon {
-  color: #0B4F75;
+  color: #172A46;
   font-size: 14px;
 }
 
 .advocate-btn-primary {
-  background: #0B4F75;
+  background: #172A46;
   color: #ffffff;
 }
 
 .advocate-btn-primary:hover:not(:disabled) {
-  background: #083B59;
+  background: #0f1c30;
 }
 
 .user-portal-link {
   display: block;
   width: 100%;
   padding: 12px;
-  border: 1.5px solid #cbd5e1;
-  color: #475569;
+  border: 1.5px solid #D9D6CC;
+  color: #64748B;
   border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
@@ -79,7 +79,7 @@
 }
 
 .user-portal-link:hover {
-  background: #f1f5f9;
-  color: #0B4F75;
-  border-color: #0B4F75;
+  background: #F7F5EF;
+  color: #172A46;
+  border-color: #172A46;
 }

@@ -10,7 +10,7 @@
 }
 
 body{
-    background:#f4f8fc;
+    background:#F7F5EF;
 }
 
 /* ==========================================
@@ -19,7 +19,7 @@ body{
 
 .hero{
 
-    background:linear-gradient(rgba(11,79,117,.90),rgba(11,79,117,.90)),
+    background:linear-gradient(rgba(23,42,70,.92),rgba(23,42,70,.92)),
     url("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1600");
 
     background-size:cover;
@@ -68,7 +68,7 @@ body{
 
     font-weight:500;
 
-    color:#FFD54F;
+    color:#C9A227;
 
 }
 
@@ -80,7 +80,7 @@ body{
 
     margin-bottom:45px;
 
-    color:#F1F5F9;
+    color:#F7F5EF;
 
 }
 
@@ -102,9 +102,9 @@ body{
 
 .primary{
 
-    background:#FFD54F;
+    background:#C9A227;
 
-    color:#0B4F75;
+    color:#172A46;
 
     border:none;
 
@@ -127,6 +127,8 @@ body{
     transform:translateY(-5px);
 
     background:white;
+
+    color:#172A46;
 
 }
 
@@ -154,7 +156,7 @@ body{
 
     background:white;
 
-    color:#0B4F75;
+    color:#172A46;
 
 }
 
@@ -166,7 +168,7 @@ body{
 
     padding:80px 8%;
 
-    background:white;
+    background:#F7F5EF;
 
 }
 
@@ -178,7 +180,7 @@ body{
 
     margin-bottom:60px;
 
-    color:#0B4F75;
+    color:#172A46;
 
 }
 
@@ -204,7 +206,7 @@ body{
 
     transition:.3s;
 
-    border-top:5px solid #0B4F75;
+    border-top:5px solid #172A46;
 
 }
 
@@ -218,7 +220,7 @@ body{
 
 .card h3{
 
-    color:#0B4F75;
+    color:#172A46;
 
     margin-bottom:18px;
 
@@ -228,7 +230,7 @@ body{
 
 .card p{
 
-    color:#555;
+    color:#202733;
 
     line-height:28px;
 
@@ -240,7 +242,7 @@ body{
 
 .about{
 
-    background:#eef5fb;
+    background:#ffffff;
 
     padding:80px 8%;
 
@@ -250,7 +252,7 @@ body{
 
     text-align:center;
 
-    color:#0B4F75;
+    color:#172A46;
 
     font-size:40px;
 
@@ -270,19 +272,21 @@ body{
 
 .about-content div{
 
-    background:white;
+    background:#F7F5EF;
+
+    border:1px solid #D9D6CC;
 
     padding:30px;
 
     border-radius:15px;
 
-    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    box-shadow:0 8px 20px rgba(0,0,0,.04);
 
 }
 
 .about-content h3{
 
-    color:#0B4F75;
+    color:#172A46;
 
     margin-bottom:20px;
 
@@ -290,7 +294,7 @@ body{
 
 .about-content p{
 
-    color:#555;
+    color:#64748B;
 
     line-height:28px;
 
@@ -302,7 +306,7 @@ body{
 
 footer{
 
-    background:#083B59;
+    background:#172A46;
 
     color:white;
 
@@ -324,7 +328,7 @@ footer p{
 
     margin:12px 0;
 
-    color:#D9ECFF;
+    color:#D9D6CC;
 
 }
 
@@ -334,7 +338,7 @@ footer hr{
 
     margin:25px auto;
 
-    border:1px solid rgba(255,255,255,.2);
+    border:1px solid rgba(217,214,204,.3);
 
 }
 

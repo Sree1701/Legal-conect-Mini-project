@@ -21,7 +21,7 @@
 
     padding:15px 60px;
 
-    background:#0B4F75;
+    background:#172A46;
 
     box-shadow:0 3px 15px rgba(0,0,0,.15);
 
@@ -87,7 +87,7 @@
 
 .logo-text p{
 
-    color:#D9ECFF;
+    color:#D9D6CC;
 
     font-size:13px;
 
@@ -125,7 +125,7 @@
 
 .nav-links a:hover{
 
-    color:#FFD54F;
+    color:#C9A227;
 
 }
 
@@ -135,9 +135,9 @@
 
 .advocate-btn{
 
-    background:#FFD54F;
+    background:#C9A227;
 
-    color:#0B4F75 !important;
+    color:#172A46 !important;
 
     padding:10px 18px;
 
@@ -151,7 +151,7 @@
 
     background:white !important;
 
-    color:#0B4F75 !important;
+    color:#172A46 !important;
 
 }
 
@@ -177,11 +177,11 @@
 
 .admin-btn:hover{
 
-    background:#e74c3c !important;
+    background:#B42318 !important;
 
     color:white !important;
 
-    border-color:#e74c3c;
+    border-color:#B42318;
 
 }
 

@@ -3,7 +3,7 @@
 ========================================== */
 
 .footer {
-  background: #083B59;
+  background: #172A46;
   color: white;
   text-align: center;
   padding: 45px 20px;
@@ -21,7 +21,7 @@
 
 .footer p {
   margin: 10px 0;
-  color: #D9ECFF;
+  color: #D9D6CC;
   font-size: 15px;
   line-height: 1.6;
 }
@@ -30,10 +30,10 @@
   width: 250px;
   margin: 22px auto;
   border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(217, 214, 204, 0.3);
 }
 
 .footer-subtext {
   font-size: 13px;
-  color: #94a3b8;
+  color: #64748B;
 }

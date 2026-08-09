@@ -4,7 +4,7 @@
 
 .otp-card {
   max-width: 440px !important;
-  border-top: 5px solid #0B4F75 !important;
+  border-top: 5px solid #172A46 !important;
 }
 
 .otp-badge {
@@ -12,27 +12,27 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #eef5fb;
-  color: #0B4F75;
+  background: #F7F5EF;
+  color: #172A46;
   padding: 6px 16px;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
-  border: 1px solid rgba(11, 79, 117, 0.15);
+  border: 1px solid #D9D6CC;
 }
 
 .otp-email-display {
   display: inline-block;
   margin-top: 8px;
-  background: #f1f5f9;
-  color: #0B4F75;
+  background: #F7F5EF;
+  color: #172A46;
   font-weight: 700;
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 15px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #D9D6CC;
   word-break: break-all;
 }
 
@@ -48,33 +48,33 @@
   letter-spacing: 12px;
   text-align: center;
   font-weight: bold;
-  color: #0B4F75;
-  border: 2px solid #cbd5e1;
+  color: #172A46;
+  border: 2px solid #D9D6CC;
   border-radius: 12px;
   outline: none;
-  background: #fafcfd;
+  background: #ffffff;
   transition: all 0.2s ease;
 }
 
 .otp-input-wrapper input:focus {
-  border-color: #0B4F75;
-  box-shadow: 0 0 0 4px rgba(11, 79, 117, 0.15);
+  border-color: #172A46;
+  box-shadow: 0 0 0 4px rgba(23, 42, 70, 0.15);
   background: #ffffff;
 }
 
 .otp-submit-btn {
-  background: #0B4F75 !important;
+  background: #172A46 !important;
 }
 
 .otp-footer-actions {
   margin-top: 25px;
   padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #D9D6CC;
   text-align: center;
 }
 
 .otp-footer-actions p {
-  color: #64748b;
+  color: #64748B;
   font-size: 14px;
   margin-bottom: 12px;
 }
@@ -82,7 +82,7 @@
 .otp-resend-btn {
   background: none;
   border: none;
-  color: #0B4F75;
+  color: #172A46;
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
@@ -91,7 +91,7 @@
 }
 
 .otp-resend-btn:hover {
-  color: #083B59;
+  color: #C9A227;
 }
 
 .otp-resend-btn:disabled {
@@ -104,12 +104,12 @@
 }
 
 .otp-back-link a {
-  color: #64748b;
+  color: #64748B;
   font-size: 14px;
   text-decoration: none;
 }
 
 .otp-back-link a:hover {
-  color: #0B4F75;
+  color: #172A46;
   text-decoration: underline;
 }

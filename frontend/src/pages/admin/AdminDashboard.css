@@ -4,22 +4,22 @@
 
 .admin-dashboard-wrapper {
   min-height: 100vh;
-  background: #f4f8fc;
+  background: #F7F5EF;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #1e293b;
+  color: #202733;
   display: flex;
   flex-direction: column;
 }
 
 /* HEADER NAVBAR */
 .admin-header {
-  background: #0f172a;
+  background: #172A46;
   color: #ffffff;
   padding: 16px 60px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 3px solid #38bdf8;
+  border-bottom: 3px solid #C9A227;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
@@ -34,15 +34,15 @@
 
 .admin-logo-icon {
   font-size: 26px;
-  background: #38bdf8;
-  color: #0f172a;
+  background: #C9A227;
+  color: #172A46;
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 2px 8px rgba(201, 162, 39, 0.3);
 }
 
 .admin-brand h2 {
@@ -54,7 +54,7 @@
 
 .admin-brand p {
   font-size: 12px;
-  color: #38bdf8;
+  color: #C9A227;
   margin: 0;
 }
 
@@ -75,8 +75,8 @@
 
 .admin-logout-btn {
   background: transparent;
-  border: 1.5px solid #38bdf8;
-  color: #38bdf8;
+  border: 1.5px solid #C9A227;
+  color: #C9A227;
   padding: 8px 18px;
   border-radius: 8px;
   font-weight: 600;
@@ -85,13 +85,13 @@
 }
 
 .admin-logout-btn:hover {
-  background: #38bdf8;
-  color: #0f172a;
+  background: #C9A227;
+  color: #172A46;
 }
 
 /* HERO BANNER */
 .admin-hero-banner {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #172A46 0%, #0f1c30 100%);
   color: #ffffff;
   padding: 35px 60px;
 }
@@ -104,7 +104,7 @@
 
 .admin-hero-content p {
   font-size: 15px;
-  color: #94a3b8;
+  color: #D9D6CC;
   max-width: 850px;
   line-height: 1.5;
 }
@@ -128,23 +128,23 @@
 }
 
 .admin-stat-card.warning-stat {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
+  border-color: #C9A227;
+  background: rgba(201, 162, 39, 0.15);
 }
 
 .admin-stat-card .stat-val {
   font-size: 28px;
   font-weight: 800;
-  color: #38bdf8;
+  color: #C9A227;
 }
 
 .admin-stat-card.warning-stat .stat-val {
-  color: #fbbf24;
+  color: #C9A227;
 }
 
 .admin-stat-card .stat-lbl {
   font-size: 12.5px;
-  color: #cbd5e1;
+  color: #D9D6CC;
   margin-top: 4px;
 }
 
@@ -162,14 +162,14 @@
   gap: 10px;
   margin-bottom: 25px;
   flex-wrap: wrap;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid #D9D6CC;
   padding-bottom: 12px;
 }
 
 .admin-tab-btn {
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  color: #475569;
+  border: 1.5px solid #D9D6CC;
+  color: #64748B;
   padding: 12px 18px;
   border-radius: 10px;
   font-size: 14px;
@@ -179,17 +179,17 @@
 }
 
 .admin-tab-btn.active {
-  background: #0f172a;
+  background: #172A46;
   color: #ffffff;
-  border-color: #0f172a;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  border-color: #172A46;
+  box-shadow: 0 4px 12px rgba(23, 42, 70, 0.2);
 }
 
 .admin-loading-spinner {
   text-align: center;
   padding: 60px 0;
   font-size: 18px;
-  color: #0B4F75;
+  color: #172A46;
   font-weight: bold;
 }
 
@@ -198,20 +198,20 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 28px;
-  box-shadow: 0 8px 25px rgba(11, 79, 117, 0.06);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 25px rgba(23, 42, 70, 0.06);
+  border: 1px solid #D9D6CC;
 }
 
 .section-title {
   font-size: 22px;
-  color: #0B4F75;
+  color: #172A46;
   margin-bottom: 8px;
   font-weight: 700;
 }
 
 .section-subtitle {
   font-size: 14px;
-  color: #64748b;
+  color: #64748B;
   margin-bottom: 22px;
 }
 
@@ -231,24 +231,28 @@
 
 .admin-search-input {
   padding: 10px 16px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #D9D6CC;
   border-radius: 8px;
   font-size: 14px;
   min-width: 260px;
   outline: none;
+  color: #202733;
+  background: #ffffff;
 }
 
 .admin-search-input:focus {
-  border-color: #0B4F75;
+  border-color: #172A46;
 }
 
 .admin-select {
   padding: 10px 14px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid #D9D6CC;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
   font-weight: 600;
+  color: #202733;
+  background: #ffffff;
 }
 
 /* OVERVIEW CARDS */
@@ -260,8 +264,8 @@
 }
 
 .overview-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #F7F5EF;
+  border: 1px solid #D9D6CC;
   border-radius: 14px;
   padding: 24px;
   display: flex;
@@ -271,7 +275,7 @@
 
 .overview-card.alert-card {
   background: #fffbeb;
-  border: 2px solid #f59e0b;
+  border: 2px solid #C9A227;
 }
 
 .overview-card-header {
@@ -282,7 +286,7 @@
 
 .overview-card-header h4 {
   font-size: 16px;
-  color: #1e293b;
+  color: #202733;
   margin: 0;
 }
 
@@ -293,22 +297,22 @@
 .card-big-num {
   font-size: 38px;
   font-weight: 800;
-  color: #0B4F75;
+  color: #172A46;
   margin: 14px 0 6px;
 }
 
 .overview-card.alert-card .card-big-num {
-  color: #d97706;
+  color: #b45309;
 }
 
 .card-subtext {
   font-size: 13px;
-  color: #64748b;
+  color: #64748B;
   margin-bottom: 16px;
 }
 
 .card-action-btn {
-  background: #0B4F75;
+  background: #172A46;
   color: #ffffff;
   border: none;
   padding: 10px 16px;
@@ -320,7 +324,8 @@
 }
 
 .card-action-btn.alert-btn {
-  background: #d97706;
+  background: #C9A227;
+  color: #172A46;
 }
 
 .card-action-btn:hover {
@@ -344,37 +349,38 @@
 .admin-table td {
   padding: 14px 16px;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid #D9D6CC;
 }
 
 .admin-table th {
-  background: #f1f5f9;
-  color: #0B4F75;
+  background: #F7F5EF;
+  color: #172A46;
   font-weight: 700;
   font-size: 13.5px;
 }
 
 .admin-table tr:hover {
-  background: #f8fafc;
+  background: #F7F5EF;
 }
 
 .table-subtext {
   font-size: 12px;
-  color: #64748b;
+  color: #64748B;
   margin-top: 2px;
 }
 
 .bar-id-pill {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #F7F5EF;
+  color: #172A46;
   padding: 4px 10px;
   border-radius: 6px;
   font-weight: 700;
   font-size: 13px;
+  border: 1px solid #D9D6CC;
 }
 
 .exp-highlight {
-  color: #047857;
+  color: #2E7D5B;
   font-size: 14px;
 }
 
@@ -398,8 +404,8 @@
 }
 
 .admin-pill {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #fdeded;
+  color: #B42318;
 }
 
 .status-pill {
@@ -417,14 +423,14 @@
 }
 
 .status-approved {
-  background: #dcfce7;
-  color: #15803d;
+  background: #e8f5e9;
+  color: #2E7D5B;
   border: 1px solid #bbf7d0;
 }
 
 .status-rejected {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #fdeded;
+  color: #B42318;
   border: 1px solid #fecaca;
 }
 
@@ -443,8 +449,8 @@
 }
 
 .log-login-success {
-  background: #dcfce7;
-  color: #166534;
+  background: #e8f5e9;
+  color: #2E7D5B;
 }
 
 .log-otp-sent {
@@ -455,8 +461,8 @@
 .log-failed-password,
 .log-invalid-otp,
 .log-otp-expired {
-  background: #fee2e2;
-  color: #991b1b;
+  background: #fdeded;
+  color: #B42318;
 }
 
 /* ACTION BUTTONS */
@@ -477,39 +483,39 @@
 }
 
 .approve-btn {
-  background: #16a34a;
+  background: #2E7D5B;
   color: #ffffff;
 }
 
 .approve-btn:hover {
-  background: #15803d;
+  background: #236448;
 }
 
 .suspend-btn {
-  background: #f59e0b;
-  color: #ffffff;
+  background: #C9A227;
+  color: #172A46;
 }
 
 .suspend-btn:hover {
-  background: #d97706;
+  background: #B38E1F;
 }
 
 .reject-btn {
-  background: #dc2626;
+  background: #B42318;
   color: #ffffff;
 }
 
 .reject-btn:hover {
-  background: #b91c1c;
+  background: #931b12;
 }
 
 .delete-btn {
-  background: #ef4444;
+  background: #B42318;
   color: #ffffff;
 }
 
 .delete-btn:hover {
-  background: #dc2626;
+  background: #931b12;
 }
 
 /* VERIFICATION CARDS */
@@ -524,9 +530,9 @@
   background: #ffffff;
   border-radius: 14px;
   padding: 24px;
-  border-top: 4px solid #f59e0b;
+  border-top: 4px solid #C9A227;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+  border: 1px solid #D9D6CC;
   border-top-width: 4px;
 }
 
@@ -543,29 +549,29 @@
 
 .verify-card-header h4 {
   font-size: 20px;
-  color: #0B4F75;
+  color: #172A46;
   margin: 4px 0;
 }
 
 .verify-email {
   font-size: 13px;
-  color: #64748b;
+  color: #64748B;
   margin-bottom: 16px;
 }
 
 .verify-details-box {
-  background: #f8fafc;
+  background: #F7F5EF;
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 18px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #D9D6CC;
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
   padding: 6px 0;
-  border-bottom: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed #D9D6CC;
   font-size: 13.5px;
 }
 
@@ -574,21 +580,21 @@
 }
 
 .detail-lbl {
-  color: #64748b;
+  color: #64748B;
   font-weight: 600;
 }
 
 .detail-val {
-  color: #1e293b;
+  color: #202733;
   font-weight: 700;
 }
 
 .detail-val.id-code {
-  color: #0369a1;
+  color: #172A46;
 }
 
 .detail-val.exp {
-  color: #047857;
+  color: #2E7D5B;
 }
 
 .verify-card-actions {
@@ -609,50 +615,50 @@
 }
 
 .verify-action-btn.approve {
-  background: #16a34a;
+  background: #2E7D5B;
   color: #ffffff;
 }
 
 .verify-action-btn.approve:hover {
-  background: #15803d;
+  background: #236448;
 }
 
 .verify-action-btn.reject {
-  background: #dc2626;
+  background: #B42318;
   color: #ffffff;
 }
 
 .verify-action-btn.reject:hover {
-  background: #b91c1c;
+  background: #931b12;
 }
 
 .verify-action-btn.suspend {
-  background: #f59e0b;
-  color: #ffffff;
+  background: #C9A227;
+  color: #172A46;
 }
 
 .verify-action-btn.suspend:hover {
-  background: #d97706;
+  background: #B38E1F;
 }
 
 .admin-empty-box {
-  background: #f8fafc;
-  border: 1.5px dashed #cbd5e1;
+  background: #F7F5EF;
+  border: 1.5px dashed #D9D6CC;
   border-radius: 12px;
   padding: 40px;
   text-align: center;
-  color: #64748b;
+  color: #64748B;
   font-size: 15px;
   margin-top: 15px;
 }
 
 .admin-success-box {
-  background: #f0fdf4;
+  background: #e8f5e9;
   border: 1.5px solid #bbf7d0;
   border-radius: 12px;
   padding: 30px;
   text-align: center;
-  color: #15803d;
+  color: #2E7D5B;
   font-size: 16px;
   font-weight: 700;
   margin-top: 15px;

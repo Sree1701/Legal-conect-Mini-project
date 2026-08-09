@@ -1,3 +1,17 @@
+:root {
+  --primary: #172A46;
+  --primary-hover: #0f1c30;
+  --bg: #F7F5EF;
+  --card-bg: #FFFFFF;
+  --accent: #C9A227;
+  --accent-hover: #B38E1F;
+  --text-main: #202733;
+  --text-secondary: #64748B;
+  --border: #D9D6CC;
+  --success: #2E7D5B;
+  --error: #B42318;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,8 +20,8 @@
 }
 
 body {
-    background: #f5f7fb;
-    color: #222;
+    background: var(--bg);
+    color: var(--text-main);
 }
 
 a {

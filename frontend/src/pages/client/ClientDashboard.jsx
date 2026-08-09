@@ -456,7 +456,7 @@ function ClientDashboard() {
                             <strong>Enrollment Year:</strong> 📅 {adv.enrollmentYear || "N/A"}
                           </div>
                           <div>
-                            <strong>Years of Experience:</strong> <strong style={{color: '#047857'}}>🎖 {adv.experience !== undefined ? adv.experience : (adv.enrollmentYear ? Math.max(0, new Date().getFullYear() - adv.enrollmentYear) : 0)} Years</strong>
+                            <strong>Years of Experience:</strong> <strong style={{color: '#2E7D5B'}}>🎖 {adv.experience !== undefined ? adv.experience : (adv.enrollmentYear ? Math.max(0, new Date().getFullYear() - adv.enrollmentYear) : 0)} Years</strong>
                           </div>
                           <div>
                             <strong>Verification Status:</strong>{" "}
