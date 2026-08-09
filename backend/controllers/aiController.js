@@ -26,9 +26,10 @@ const getLegalAIResponse = async (req, res) => {
     // -------------------------------------------------------------
 
     // Platform Keywords (LegalConnect Features)
+    // Platform Keywords (LegalConnect Features)
     const platformKeywords = [
       "legalconnect", "legal connect", "advocate", "lawyer", "book", "booking",
-      "appointment", "case", "complaint", "consultation", "gitter", "meeting",
+      "appointment", "case", "complaint", "consultation", "call", "meeting",
       "slot", "document", "upload", "client", "dashboard", "fee", "register",
       "registration", "login", "profile", "account", "schedule", "review", "rating"
     ];
@@ -108,7 +109,7 @@ const getLegalAIResponse = async (req, res) => {
         "Find & book verified advocates based on specialization and availability.",
         "Register new legal cases and securely attach supporting evidence files.",
         "Get instant guidance on applicable Indian statutes, procedures, and required documents.",
-        "Access online consultation rooms via Gitter for scheduled appointments."
+        "Access online consultation rooms via shared conference-call links for scheduled appointments."
       ];
       procedureSteps = [
         "1. Ask a question regarding LegalConnect features or an Indian legal topic.",
@@ -119,10 +120,10 @@ const getLegalAIResponse = async (req, res) => {
       recommendedSpecialization = null;
     }
     // 1. LEGALCONNECT PLATFORM FEATURES & SERVICES
-    else if (query.includes("book") || query.includes("appointment") || query.includes("gitter") || query.includes("slot") || query.includes("upload") || query.includes("dashboard") || query.includes("register case") || query.includes("file complaint") || query.includes("how to use legalconnect")) {
+    else if (query.includes("book") || query.includes("appointment") || query.includes("call") || query.includes("slot") || query.includes("upload") || query.includes("dashboard") || query.includes("register case") || query.includes("file complaint") || query.includes("how to use legalconnect")) {
       category = "LegalConnect Platform Guidance";
       recommendedSpecialization = null;
-      summary = "LegalConnect is a digital legal platform connecting clients with verified Advocates in India for consultation, case registration, and online video/chat hearings via Gitter.";
+      summary = "LegalConnect is a digital legal platform connecting clients with verified Advocates in India for consultation, case registration, and online video/audio conference calls.";
       legalSections = [
         "LegalConnect Service Terms (Digital Legal Consultation)",
         "IT Act, 2000 (Section 10A - Validity of Electronic Contracts)",
@@ -131,12 +132,12 @@ const getLegalAIResponse = async (req, res) => {
       keyPoints = [
         "Advocate Consultation: Browse advocates by specialization (Civil, Criminal, Family, Cyber, Property), view their fees, and pick available time slots.",
         "Case Registration: Click 'Register New Case' in your Client Dashboard to submit case details and attach document files.",
-        "Online Gitter Room: Once your advocate approves your appointment, a Gitter meeting link is generated in your 'Booked Consultations' tab."
+        "Online Meeting Room: Once your advocate approves your appointment, a conference-call meeting link is generated in your 'Booked Consultations' tab."
       ];
       procedureSteps = [
         "1. Go to 'Find Advocates' tab to view verified advocates and their available slots.",
         "2. Click 'Book Consultation / Register Case' and fill out your issue description.",
-        "3. Track appointment status and join the online Gitter meeting room on the scheduled date."
+        "3. Track appointment status and join the online conference call on the scheduled date."
       ];
       documentList = ["Case Title & Description", "Supporting Evidence / Receipts / Agreement PDFs or Images", "Government Photo ID Proof"];
     }

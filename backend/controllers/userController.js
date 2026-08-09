@@ -16,7 +16,7 @@ exports.getAdvocates = async (req, res) => {
                 specialization: adv.specialization || "General Legal Practice",
                 bio: adv.bio || "",
                 officeAddress: adv.officeAddress || "",
-                consultationFee: adv.consultationFee || 0,
+                consultationFee: adv.consultationFee !== undefined && adv.consultationFee !== null ? adv.consultationFee : null,
                 advocateStatus: adv.advocateStatus || "Pending Verification",
             };
         });
@@ -53,7 +53,14 @@ exports.updateAdvocateProfile = async (req, res) => {
         if (specialization !== undefined) user.specialization = specialization;
         if (bio !== undefined) user.bio = bio;
         if (officeAddress !== undefined) user.officeAddress = officeAddress;
-        if (consultationFee !== undefined) user.consultationFee = Number(consultationFee);
+        if (fullName) user.fullName = fullName;
+        if (phone !== undefined) user.phone = phone;
+        if (specialization !== undefined) user.specialization = specialization;
+        if (bio !== undefined) user.bio = bio;
+        if (officeAddress !== undefined) user.officeAddress = officeAddress;
+        if (consultationFee !== undefined) {
+            user.consultationFee = (consultationFee === "" || consultationFee === null) ? null : Number(consultationFee);
+        }
 
         await user.save();
 
@@ -74,7 +81,7 @@ exports.updateAdvocateProfile = async (req, res) => {
             specialization: user.specialization || "General Legal Practice",
             bio: user.bio || "",
             officeAddress: user.officeAddress || "",
-            consultationFee: user.consultationFee || 0,
+            consultationFee: user.consultationFee !== undefined && user.consultationFee !== null ? user.consultationFee : null,
             advocateStatus: user.advocateStatus || "Pending Verification",
             availableSlots: user.availableSlots || [],
             workingHours: user.workingHours || {},
@@ -127,13 +134,17 @@ exports.addAdvocateSlot = async (req, res) => {
             return res.status(404).json({ success: false, message: "Advocate account not found" });
         }
 
+        const calculatedFee = (fee !== undefined && fee !== "" && fee !== null) 
+            ? Number(fee) 
+            : (advocate.consultationFee !== undefined && advocate.consultationFee !== null ? advocate.consultationFee : null);
+
         const newSlot = {
             slotId: new require("mongoose").Types.ObjectId().toString(),
             date,
             startTime,
             endTime,
             duration: Number(duration) || 30,
-            fee: Number(fee) || advocate.consultationFee || 500,
+            fee: calculatedFee,
             isBooked: false,
         };
 
@@ -166,7 +177,9 @@ exports.autoGenerateSlots = async (req, res) => {
         }
 
         const duration = Number(slotDuration) || advocate.workingHours?.slotDuration || 30;
-        const slotFee = Number(fee) || advocate.consultationFee || 500;
+        const slotFee = (fee !== undefined && fee !== "" && fee !== null) 
+            ? Number(fee) 
+            : (advocate.consultationFee !== undefined && advocate.consultationFee !== null ? advocate.consultationFee : null);
 
         // Standard time parsing helper (e.g. "09:00 AM" to minutes)
         const parseMinutes = (timeStr) => {

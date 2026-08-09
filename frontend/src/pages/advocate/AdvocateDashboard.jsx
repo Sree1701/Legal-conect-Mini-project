@@ -7,19 +7,43 @@ import {
   rejectAppointment,
   completeAppointment,
 } from "../../services/appointmentService";
+import {
+  getAdvocateSlots,
+  addAdvocateSlot,
+  autoGenerateSlots,
+  deleteAdvocateSlot,
+} from "../../services/userService";
 import "./AdvocateDashboard.css";
 
 function AdvocateDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'cases' | 'appointments' | 'profile'
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'slots' | 'cases' | 'appointments' | 'profile'
   const [appointments, setAppointments] = useState([]);
   const [cases, setCases] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
   const [statusFilterAppt, setStatusFilterAppt] = useState("All");
   const [statusFilterCase, setStatusFilterCase] = useState("All");
+
+  // Slot Management Forms State
+  const [singleSlotForm, setSingleSlotForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    startTime: "10:00 AM",
+    endTime: "10:30 AM",
+    duration: 30,
+    fee: "",
+  });
+  const [autoGenForm, setAutoGenForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    startTime: "09:00 AM",
+    endTime: "05:00 PM",
+    slotDuration: 30,
+    fee: "",
+  });
+  const [slotActionMessage, setSlotActionMessage] = useState("");
 
   // Case Hearing Slot Allocation Modal State (Slot assigned directly under each case)
   const [selectedCaseForSlot, setSelectedCaseForSlot] = useState(null);
@@ -27,7 +51,7 @@ function AdvocateDashboard() {
     hearingDate: "",
     hearingTime: "",
     duration: 30,
-    consultationFee: 500,
+    consultationFee: "",
     meetingLink: "",
     advocateNotes: "",
     status: "Hearing Scheduled",
@@ -104,6 +128,16 @@ function AdvocateDashboard() {
       } catch (errCase) {
         console.error("Error fetching assigned cases:", errCase);
       }
+
+      // Fetch Advocate Available Slots
+      try {
+        const slotRes = await getAdvocateSlots(advocateId);
+        if (slotRes?.data?.success) {
+          setAvailableSlots(slotRes.data.availableSlots || []);
+        }
+      } catch (errSlot) {
+        console.error("Error fetching advocate slots:", errSlot);
+      }
     } catch (err) {
       console.error("Error fetching advocate dashboard data:", err);
     } finally {
@@ -117,30 +151,96 @@ function AdvocateDashboard() {
     navigate("/");
   };
 
+  // Add Single Custom Slot
+  const handleAddSingleSlot = async (e) => {
+    e.preventDefault();
+    const advId = user.id || user._id;
+    if (!advId) return;
+
+    try {
+      const payload = {
+        ...singleSlotForm,
+        fee: singleSlotForm.fee !== "" ? Number(singleSlotForm.fee) : (user?.consultationFee ?? null),
+      };
+      const res = await addAdvocateSlot(advId, payload);
+      if (res.data.success) {
+        setAvailableSlots(res.data.slots || []);
+        setSlotActionMessage("Single consultation slot added successfully!");
+        setTimeout(() => setSlotActionMessage(""), 3000);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to add consultation slot.");
+    }
+  };
+
+  // Auto Generate Daily Slots
+  const handleAutoGenerateSlots = async (e) => {
+    e.preventDefault();
+    const advId = user.id || user._id;
+    if (!advId) return;
+
+    try {
+      const payload = {
+        ...autoGenForm,
+        fee: autoGenForm.fee !== "" ? Number(autoGenForm.fee) : (user?.consultationFee ?? null),
+      };
+      const res = await autoGenerateSlots(advId, payload);
+      if (res.data.success) {
+        setAvailableSlots(res.data.slots || []);
+        setSlotActionMessage(res.data.message || "Daily slots generated successfully!");
+        setTimeout(() => setSlotActionMessage(""), 3000);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to auto-generate slots.");
+    }
+  };
+
+  // Delete Unbooked Slot
+  const handleDeleteSlot = async (slotId) => {
+    const advId = user.id || user._id;
+    if (!advId || !slotId) return;
+    if (!window.confirm("Are you sure you want to delete this unbooked slot?")) return;
+
+    try {
+      const res = await deleteAdvocateSlot(advId, slotId);
+      if (res.data.success) {
+        setAvailableSlots(res.data.slots || []);
+        setSlotActionMessage("Slot removed successfully.");
+        setTimeout(() => setSlotActionMessage(""), 3000);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete slot.");
+    }
+  };
+
   // Open Case Hearing Slot Scheduling Modal
   const openCaseSlotModal = (c) => {
     setSelectedCaseForSlot(c);
-    const defaultGitter = `https://gitter.im/LegalConnect-Case-${c._id}`;
+    const defaultMeetingLink = `https://meet.jit.si/LegalConnect-Case-${c._id}`;
     setCaseSlotForm({
       hearingDate: c.hearingDate || new Date().toISOString().split("T")[0],
       hearingTime: c.hearingTime || "10:00 AM",
       duration: c.duration || 30,
-      consultationFee: c.consultationFee || user?.consultationFee || 500,
-      meetingLink: c.meetingLink || defaultGitter,
+      consultationFee: c.consultationFee !== undefined && c.consultationFee !== null ? c.consultationFee : (user?.consultationFee || ""),
+      meetingLink: c.meetingLink || defaultMeetingLink,
       advocateNotes: c.advocateNotes || "",
       status: c.status === "Pending" || c.status === "Assigned" ? "Hearing Scheduled" : c.status,
     });
   };
 
-  // Save Case Hearing Slot & Gitter Link
+  // Save Case Hearing Slot & Online Meeting Link
   const handleSaveCaseSlotSubmit = async (e) => {
     e.preventDefault();
     if (!selectedCaseForSlot) return;
 
     try {
-      const res = await api.put(`/complaints/${selectedCaseForSlot._id}`, caseSlotForm);
+      const payload = {
+        ...caseSlotForm,
+        consultationFee: caseSlotForm.consultationFee !== "" ? Number(caseSlotForm.consultationFee) : null,
+      };
+      const res = await api.put(`/complaints/${selectedCaseForSlot._id}`, payload);
       if (res.data.success) {
-        alert("Case Hearing Slot & Gitter Online Meeting Link Scheduled Successfully!");
+        alert("Case Hearing Slot & Online Meeting Link Scheduled Successfully!");
         setSelectedCaseForSlot(null);
         fetchDashboardData(user.id || user._id);
       }
@@ -156,8 +256,8 @@ function AdvocateDashboard() {
       appointmentDate: appointment.appointmentDate || "",
       appointmentTime: appointment.appointmentTime || "",
       duration: appointment.duration || 30,
-      consultationFee: appointment.consultationFee || user?.consultationFee || 500,
-      meetingLink: appointment.meetingLink || `https://gitter.im/LegalConnect-Consultation-${appointment._id}`,
+      consultationFee: appointment.consultationFee !== undefined && appointment.consultationFee !== null ? appointment.consultationFee : (user?.consultationFee || ""),
+      meetingLink: appointment.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appointment._id}`,
       advocateNotes: appointment.advocateNotes || "",
     });
     setShowSlotModal(true);
@@ -169,7 +269,11 @@ function AdvocateDashboard() {
     if (!selectedAppointment) return;
 
     try {
-      const res = await assignSlot(selectedAppointment._id, slotForm);
+      const payload = {
+        ...slotForm,
+        consultationFee: slotForm.consultationFee !== "" ? Number(slotForm.consultationFee) : null,
+      };
+      const res = await assignSlot(selectedAppointment._id, payload);
       if (res.data.success) {
         alert("Consultation Slot Assigned & Approved Successfully!");
         setShowSlotModal(false);
@@ -266,7 +370,7 @@ function AdvocateDashboard() {
       specialization: user?.specialization || "General Legal Practice",
       bio: user?.bio || "",
       officeAddress: user?.officeAddress || "",
-      consultationFee: user?.consultationFee || 0,
+      consultationFee: user?.consultationFee !== undefined && user?.consultationFee !== null ? user.consultationFee : "",
     });
     setProfileMessage("");
     setShowProfileModal(true);
@@ -276,7 +380,11 @@ function AdvocateDashboard() {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.put(`/users/profile/${user.id || user._id}`, profileForm);
+      const payload = {
+        ...profileForm,
+        consultationFee: profileForm.consultationFee !== "" ? Number(profileForm.consultationFee) : null,
+      };
+      const res = await api.put(`/users/profile/${user.id || user._id}`, payload);
       if (res.data.success) {
         setProfileMessage("Profile updated successfully!");
         const updatedUser = { ...user, ...res.data.user };
@@ -305,6 +413,7 @@ function AdvocateDashboard() {
 
   const pendingRequestsCount = appointments.filter((a) => a.status === "Pending").length;
   const scheduledCasesCount = cases.filter((c) => c.hearingDate || c.status === "Hearing Scheduled").length;
+  const openSlotsCount = availableSlots.filter((s) => !s.isBooked).length;
 
   return (
     <div className="adv-dashboard-wrapper">
@@ -342,29 +451,29 @@ function AdvocateDashboard() {
       {/* HERO BANNER */}
       <section className="adv-hero-banner">
         <div className="adv-hero-content">
-          <h1>Advocate Case Management &amp; Hearing Slot Portal</h1>
+          <h1>Advocate Availability &amp; Consultation Management Portal</h1>
           <p>
-            Schedule hearing slots and Gitter online consultation rooms directly under each assigned case, review client case files, and update progress in real-time.
+            Set your consultation fee per hour, configure your available dates and times, confirm consultation slots, and share conference-call links with clients.
           </p>
 
           <div className="adv-stats-row">
             <div className="adv-stat-box">
-              <span className="adv-stat-val">{cases.length}</span>
-              <span className="adv-stat-lbl">Assigned Cases</span>
-            </div>
-            <div className="adv-stat-box">
-              <span className="adv-stat-val">{scheduledCasesCount}</span>
-              <span className="adv-stat-lbl">Scheduled Hearing Slots</span>
+              <span className="adv-stat-val">{availableSlots.length}</span>
+              <span className="adv-stat-lbl">Configured Slots ({openSlotsCount} Available)</span>
             </div>
             <div className="adv-stat-box warning-box">
               <span className="adv-stat-val">{pendingRequestsCount}</span>
               <span className="adv-stat-lbl">Pending Requests</span>
             </div>
             <div className="adv-stat-box">
+              <span className="adv-stat-val">{cases.length}</span>
+              <span className="adv-stat-lbl">Assigned Cases</span>
+            </div>
+            <div className="adv-stat-box">
               <span className="adv-stat-val">
-                {user?.experience !== undefined ? user?.experience : (user?.enrollmentYear ? Math.max(0, new Date().getFullYear() - user.enrollmentYear) : 0)} Yrs
+                {user?.consultationFee ? `₹${user.consultationFee}/hr` : "Fee Not Set"}
               </span>
-              <span className="adv-stat-lbl">Experience</span>
+              <span className="adv-stat-lbl">Consultation Fee</span>
             </div>
           </div>
         </div>
@@ -378,6 +487,13 @@ function AdvocateDashboard() {
             onClick={() => setActiveTab("overview")}
           >
             📊 System Overview
+          </button>
+
+          <button
+            className={`adv-tab-btn ${activeTab === "slots" ? "active" : ""}`}
+            onClick={() => setActiveTab("slots")}
+          >
+            🗓 Availability &amp; Slots ({availableSlots.length})
           </button>
 
           <button
@@ -420,29 +536,29 @@ function AdvocateDashboard() {
                 <div className="adv-overview-grid">
                   <div className="adv-overview-card highlight-card">
                     <div className="card-icon-header">
-                      <span className="card-emoji">📂</span>
-                      <h4>Assigned Cases &amp; Slots</h4>
+                      <span className="card-emoji">🗓</span>
+                      <h4>Available Consultation Slots</h4>
                     </div>
-                    <p className="card-big-number">{cases.length} Cases</p>
+                    <p className="card-big-number">{openSlotsCount} Available</p>
                     <p className="card-subtext">
-                      {scheduledCasesCount} cases have scheduled hearing slots and Gitter rooms.
+                      {availableSlots.length} total slots created across various dates.
                     </p>
                     <button
                       className="adv-card-action-btn gold-btn"
-                      onClick={() => setActiveTab("cases")}
+                      onClick={() => setActiveTab("slots")}
                     >
-                      Manage Case Slots &amp; Documents →
+                      Manage Available Slots →
                     </button>
                   </div>
 
                   <div className="adv-overview-card">
                     <div className="card-icon-header">
                       <span className="card-emoji">📋</span>
-                      <h4>Consultation Queue</h4>
+                      <h4>Consultation Requests Queue</h4>
                     </div>
                     <p className="card-big-number">{pendingRequestsCount}</p>
                     <p className="card-subtext">
-                      Direct client appointment requests waiting for slot allotment
+                      Direct client appointment requests waiting for confirmation &amp; meeting links.
                     </p>
                     <button
                       className="adv-card-action-btn"
@@ -455,19 +571,225 @@ function AdvocateDashboard() {
                   <div className="adv-overview-card">
                     <div className="card-icon-header">
                       <span className="card-emoji">👤</span>
-                      <h4>Advocate Credentials</h4>
+                      <h4>Hourly Consultation Fee</h4>
                     </div>
-                    <p className="card-big-number">₹{user?.consultationFee || 500}</p>
+                    <p className="card-big-number">
+                      {user?.consultationFee ? `₹${user.consultationFee}/hr` : "Not Set"}
+                    </p>
                     <p className="card-subtext">
-                      Default fee | {user?.specialization || "General Practice"}
+                      {user?.specialization || "General Practice"}
                     </p>
                     <button
                       className="adv-card-action-btn"
                       onClick={() => setActiveTab("profile")}
                     >
-                      View &amp; Edit Profile →
+                      Set Fee &amp; Edit Profile →
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: AVAILABILITY & CONSULTATION SLOTS MANAGEMENT */}
+            {activeTab === "slots" && (
+              <div className="adv-section">
+                <div className="section-header-row">
+                  <div>
+                    <h3 className="section-title">🗓 Availability &amp; Consultation Slot Management</h3>
+                    <p className="section-subtitle">
+                      Set your available dates and times for client consultations. Clients can view these available slots before booking.
+                    </p>
+                  </div>
+                </div>
+
+                {slotActionMessage && (
+                  <div className="adv-success-banner">
+                    {slotActionMessage}
+                  </div>
+                )}
+
+                <div className="adv-slot-management-grid">
+                  {/* FORM 1: ADD SINGLE SLOT */}
+                  <div className="slot-form-card">
+                    <h4>+ Add Single Consultation Slot</h4>
+                    <p className="form-subtext">Add a specific date and time window when you are free.</p>
+
+                    <form onSubmit={handleAddSingleSlot} className="slot-inner-form">
+                      <div className="input-group">
+                        <label>Date *</label>
+                        <input
+                          type="date"
+                          value={singleSlotForm.date}
+                          onChange={(e) => setSingleSlotForm({ ...singleSlotForm, date: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="input-group-row">
+                        <div className="input-group">
+                          <label>Start Time *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 10:00 AM"
+                            value={singleSlotForm.startTime}
+                            onChange={(e) => setSingleSlotForm({ ...singleSlotForm, startTime: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="input-group">
+                          <label>End Time *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 10:30 AM"
+                            value={singleSlotForm.endTime}
+                            onChange={(e) => setSingleSlotForm({ ...singleSlotForm, endTime: e.target.value })}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="input-group-row">
+                        <div className="input-group">
+                          <label>Duration (Mins)</label>
+                          <input
+                            type="number"
+                            value={singleSlotForm.duration}
+                            onChange={(e) => setSingleSlotForm({ ...singleSlotForm, duration: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="input-group">
+                          <label>Slot Fee (₹)</label>
+                          <input
+                            type="number"
+                            placeholder={user?.consultationFee ? `Default: ₹${user.consultationFee}` : "Set fee for this slot"}
+                            value={singleSlotForm.fee}
+                            onChange={(e) => setSingleSlotForm({ ...singleSlotForm, fee: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="add-slot-submit-btn">
+                        + Add Custom Slot
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* FORM 2: AUTO GENERATE DAILY SLOTS */}
+                  <div className="slot-form-card">
+                    <h4>⚡ Auto-Generate Daily Slots</h4>
+                    <p className="form-subtext">Generate back-to-back consultation slots for an entire working day.</p>
+
+                    <form onSubmit={handleAutoGenerateSlots} className="slot-inner-form">
+                      <div className="input-group">
+                        <label>Select Date *</label>
+                        <input
+                          type="date"
+                          value={autoGenForm.date}
+                          onChange={(e) => setAutoGenForm({ ...autoGenForm, date: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="input-group-row">
+                        <div className="input-group">
+                          <label>Day Start Time</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 09:00 AM"
+                            value={autoGenForm.startTime}
+                            onChange={(e) => setAutoGenForm({ ...autoGenForm, startTime: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="input-group">
+                          <label>Day End Time</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 05:00 PM"
+                            value={autoGenForm.endTime}
+                            onChange={(e) => setAutoGenForm({ ...autoGenForm, endTime: e.target.value })}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="input-group-row">
+                        <div className="input-group">
+                          <label>Slot Duration (Mins)</label>
+                          <input
+                            type="number"
+                            value={autoGenForm.slotDuration}
+                            onChange={(e) => setAutoGenForm({ ...autoGenForm, slotDuration: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="input-group">
+                          <label>Fee per Slot (₹)</label>
+                          <input
+                            type="number"
+                            placeholder={user?.consultationFee ? `Default: ₹${user.consultationFee}` : "Set fee per slot"}
+                            value={autoGenForm.fee}
+                            onChange={(e) => setAutoGenForm({ ...autoGenForm, fee: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <button type="submit" className="add-slot-submit-btn gold-btn">
+                        ⚡ Generate Full Day Slots
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                {/* CONFIGURED SLOTS DISPLAY */}
+                <div className="configured-slots-section">
+                  <h4 className="sub-title">📋 Your Configured Available Slots ({availableSlots.length})</h4>
+
+                  {availableSlots.length === 0 ? (
+                    <div className="adv-empty-state">
+                      <h3>No Available Slots Configured Yet</h3>
+                      <p>Use the forms above to set your available dates and times for client bookings.</p>
+                    </div>
+                  ) : (
+                    <div className="slots-grid-display">
+                      {availableSlots.map((slot) => (
+                        <div
+                          className={`slot-card-item ${slot.isBooked ? "booked-slot" : "available-slot"}`}
+                          key={slot.slotId || slot._id}
+                        >
+                          <div className="slot-card-top">
+                            <span className="slot-date-badge">📅 {slot.date}</span>
+                            <span className={`slot-status-pill ${slot.isBooked ? "booked" : "free"}`}>
+                              {slot.isBooked ? "🔒 Booked" : "✓ Available"}
+                            </span>
+                          </div>
+
+                          <div className="slot-card-body">
+                            <p className="slot-time-text">
+                              ⏰ <strong>{slot.startTime}</strong> - <strong>{slot.endTime}</strong>
+                            </p>
+                            <p className="slot-meta-text">
+                              ⏱ Duration: {slot.duration || 30} Mins | 💵 Fee: {slot.fee ? `₹${slot.fee}` : "Not Specified"}
+                            </p>
+                          </div>
+
+                          {!slot.isBooked ? (
+                            <button
+                              className="delete-slot-btn"
+                              onClick={() => handleDeleteSlot(slot.slotId)}
+                            >
+                              🗑 Delete Slot
+                            </button>
+                          ) : (
+                            <p className="booked-by-subtext">Booked by client</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -479,7 +801,7 @@ function AdvocateDashboard() {
                   <div>
                     <h3 className="section-title">📂 Assigned Client Cases &amp; Hearing Slots</h3>
                     <p className="section-subtitle">
-                      Assign hearing dates, times, advocate notes, and Gitter meeting links directly under each client case.
+                      Assign hearing dates, times, advocate notes, and online meeting links directly under each client case.
                     </p>
                   </div>
                   <div className="filter-controls">
@@ -536,7 +858,7 @@ function AdvocateDashboard() {
                               className="schedule-slot-btn"
                               onClick={() => openCaseSlotModal(c)}
                             >
-                              ✏ {c.hearingDate ? "Edit Hearing Slot & Gitter Link" : "+ Schedule Hearing Slot & Gitter Link"}
+                              ✏ {c.hearingDate ? "Edit Hearing Slot & Meeting Link" : "+ Schedule Hearing Slot & Meeting Link"}
                             </button>
                           </div>
 
@@ -546,19 +868,19 @@ function AdvocateDashboard() {
                                 <span>📅 <strong>Hearing Date:</strong> {c.hearingDate}</span>
                                 <span>⏰ <strong>Time:</strong> {c.hearingTime || "TBD"}</span>
                                 <span>⏱ <strong>Duration:</strong> {c.duration || 30} Mins</span>
-                                <span>💵 <strong>Fee:</strong> ₹{c.consultationFee || 500}</span>
+                                <span>💵 <strong>Fee:</strong> {c.consultationFee ? `₹${c.consultationFee}` : "Not Specified"}</span>
                               </div>
 
                               {c.meetingLink && (
                                 <div className="meeting-link-row">
-                                  <span>💬 <strong>Gitter Room:</strong> <code>{c.meetingLink}</code></span>
+                                  <span>💬 <strong>Conference Link:</strong> <code>{c.meetingLink}</code></span>
                                   <a
                                     href={c.meetingLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="gitter-link-btn"
+                                    className="call-link-btn"
                                   >
-                                    🎥 Open Gitter Room ➔
+                                    🎥 Join Conference Call ➔
                                   </a>
                                 </div>
                               )}
@@ -571,7 +893,7 @@ function AdvocateDashboard() {
                             </div>
                           ) : (
                             <p className="no-slot-scheduled">
-                              No hearing slot scheduled yet for this case. Click <strong>'+ Schedule Hearing Slot &amp; Gitter Link'</strong> to fix a time for the client.
+                              No hearing slot scheduled yet for this case. Click <strong>'+ Schedule Hearing Slot &amp; Meeting Link'</strong> to fix a time for the client.
                             </p>
                           )}
                         </div>
@@ -697,17 +1019,17 @@ function AdvocateDashboard() {
                             <p><strong>📅 Date:</strong> {appt.appointmentDate || "TBD"}</p>
                             <p><strong>⏰ Time:</strong> {appt.appointmentTime || "TBD"}</p>
                             <p><strong>⏱ Duration:</strong> {appt.duration || 30} Mins</p>
-                            <p><strong>💵 Consultation Fee:</strong> ₹{appt.consultationFee || 0}</p>
+                            <p><strong>💵 Consultation Fee:</strong> {appt.consultationFee ? `₹${appt.consultationFee}` : "Not Specified"}</p>
                             {appt.meetingLink && (
                               <div className="meeting-link-row">
-                                <span>💬 <strong>Gitter Room:</strong></span>
+                                <span>💬 <strong>Conference Link:</strong></span>
                                 <a
                                   href={appt.meetingLink}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="gitter-link-btn"
+                                  className="call-link-btn"
                                 >
-                                  🎥 Join Gitter Room ➔
+                                  🎥 Join Conference Call ➔
                                 </a>
                               </div>
                             )}
@@ -809,8 +1131,8 @@ function AdvocateDashboard() {
                       <span>📞 {user?.phone || "Not Provided"}</span>
                     </div>
                     <div className="info-item">
-                      <strong>Default Consultation Fee:</strong>
-                      <span>₹{user?.consultationFee || 0}</span>
+                      <strong>Hourly Consultation Fee:</strong>
+                      <span>{user?.consultationFee ? `₹${user.consultationFee} / hour` : "Not Specified"}</span>
                     </div>
                     <div className="info-item full-width">
                       <strong>Office Address / Location:</strong>
@@ -833,7 +1155,7 @@ function AdvocateDashboard() {
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h2>Schedule Case Hearing Slot &amp; Gitter Link</h2>
+              <h2>Schedule Case Hearing Slot &amp; Online Call Link</h2>
               <button
                 className="modal-close"
                 onClick={() => setSelectedCaseForSlot(null)}
@@ -887,6 +1209,7 @@ function AdvocateDashboard() {
                   <label>Consultation Fee (₹)</label>
                   <input
                     type="number"
+                    placeholder="Enter fee or leave empty"
                     value={caseSlotForm.consultationFee}
                     onChange={(e) =>
                       setCaseSlotForm({ ...caseSlotForm, consultationFee: e.target.value })
@@ -896,11 +1219,11 @@ function AdvocateDashboard() {
               </div>
 
               <div className="input-group">
-                <label>Gitter Online Meeting Room Link (Shared with Client)</label>
+                <label>Shareable Conference-Call Link (Shared with Client)</label>
                 <div className="input-with-button-row">
                   <input
                     type="text"
-                    placeholder="https://gitter.im/LegalConnect-Case-Room"
+                    placeholder="e.g. https://meet.google.com/abc-defg-hij or https://zoom.us/j/123"
                     value={caseSlotForm.meetingLink}
                     onChange={(e) =>
                       setCaseSlotForm({ ...caseSlotForm, meetingLink: e.target.value })
@@ -912,11 +1235,11 @@ function AdvocateDashboard() {
                     onClick={() => {
                       setCaseSlotForm({
                         ...caseSlotForm,
-                        meetingLink: `https://gitter.im/LegalConnect-Case-${selectedCaseForSlot._id}`,
+                        meetingLink: `https://meet.jit.si/LegalConnect-Case-${selectedCaseForSlot._id}`,
                       });
                     }}
                   >
-                    ⚡ Auto-Generate Gitter Link
+                    ⚡ Auto-Generate Link
                   </button>
                 </div>
               </div>
@@ -959,7 +1282,7 @@ function AdvocateDashboard() {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  Save Hearing Slot &amp; Gitter Link
+                  Save Hearing Slot &amp; Meeting Link
                 </button>
               </div>
             </form>
@@ -972,7 +1295,7 @@ function AdvocateDashboard() {
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h2>Confirm Consultation Slot Allotment</h2>
+              <h2>Confirm Consultation Slot &amp; Share Call Link</h2>
               <button
                 className="modal-close"
                 onClick={() => {
@@ -1010,11 +1333,36 @@ function AdvocateDashboard() {
                 />
               </div>
 
+              <div className="input-group-row">
+                <div className="input-group">
+                  <label>Duration (Mins)</label>
+                  <input
+                    type="number"
+                    value={slotForm.duration}
+                    onChange={(e) =>
+                      setSlotForm({ ...slotForm, duration: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Consultation Fee (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="Enter fee or leave empty"
+                    value={slotForm.consultationFee}
+                    onChange={(e) =>
+                      setSlotForm({ ...slotForm, consultationFee: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
               <div className="input-group">
-                <label>Gitter Online Meeting Room Link</label>
+                <label>Shareable Online Conference Call Link (Google Meet, Zoom, Jitsi, etc.)</label>
                 <div className="input-with-button-row">
                   <input
                     type="text"
+                    placeholder="https://meet.google.com/abc-defg-hij"
                     value={slotForm.meetingLink}
                     onChange={(e) =>
                       setSlotForm({ ...slotForm, meetingLink: e.target.value })
@@ -1027,13 +1375,23 @@ function AdvocateDashboard() {
                       const apptId = selectedAppointment?._id || Date.now();
                       setSlotForm({
                         ...slotForm,
-                        meetingLink: `https://gitter.im/LegalConnect-Consultation-${apptId}`,
+                        meetingLink: `https://meet.jit.si/LegalConnect-Consultation-${apptId}`,
                       });
                     }}
                   >
-                    ⚡ Auto-Generate Gitter Link
+                    ⚡ Auto-Generate Call Link
                   </button>
                 </div>
+              </div>
+
+              <div className="input-group">
+                <label>Advocate Notes for Client</label>
+                <textarea
+                  rows="3"
+                  value={slotForm.advocateNotes}
+                  onChange={(e) => setSlotForm({ ...slotForm, advocateNotes: e.target.value })}
+                  placeholder="Enter meeting instructions, preparation notes, or call reminders..."
+                />
               </div>
 
               <div className="modal-actions">
@@ -1048,7 +1406,7 @@ function AdvocateDashboard() {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  Confirm Allotment &amp; Approve
+                  Confirm Slot &amp; Approve
                 </button>
               </div>
             </form>
@@ -1149,6 +1507,28 @@ function AdvocateDashboard() {
               </div>
 
               <div className="input-group">
+                <label>Consultation Fee (₹ per hour)</label>
+                <input
+                  type="number"
+                  placeholder="Set your hourly consultation fee (e.g. 1500)"
+                  value={profileForm.consultationFee}
+                  onChange={(e) =>
+                    setProfileForm({ ...profileForm, consultationFee: e.target.value })
+                  }
+                />
+                <span className="input-help-text">Leave empty if fee is not specified. No default fee will be displayed.</span>
+              </div>
+
+              <div className="input-group">
+                <label>Phone Number</label>
+                <input
+                  type="text"
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                />
+              </div>
+
+              <div className="input-group">
                 <label>Legal Specialization</label>
                 <select
                   value={profileForm.specialization}
@@ -1170,6 +1550,24 @@ function AdvocateDashboard() {
                 </select>
               </div>
 
+              <div className="input-group">
+                <label>Office Address</label>
+                <input
+                  type="text"
+                  value={profileForm.officeAddress}
+                  onChange={(e) => setProfileForm({ ...profileForm, officeAddress: e.target.value })}
+                />
+              </div>
+
+              <div className="input-group">
+                <label>Professional Bio</label>
+                <textarea
+                  rows="3"
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                />
+              </div>
+
               <div className="modal-actions">
                 <button
                   type="button"
@@ -1179,7 +1577,7 @@ function AdvocateDashboard() {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  Save Changes
+                  Save Profile Changes
                 </button>
               </div>
             </form>

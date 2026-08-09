@@ -53,7 +53,7 @@ const appointmentSchema = new mongoose.Schema(
 
     consultationFee: {
         type: Number,
-        default: 0,
+        default: null,
     },
 
     meetingLink: {

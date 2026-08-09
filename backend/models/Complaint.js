@@ -81,7 +81,7 @@ const complaintSchema = new mongoose.Schema(
 
     consultationFee: {
         type: Number,
-        default: 500
+        default: null
     },
 
     meetingLink: {

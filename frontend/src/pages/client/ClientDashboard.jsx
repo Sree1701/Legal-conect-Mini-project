@@ -167,9 +167,9 @@ function ClientDashboard() {
     navigate("/");
   };
 
-  const openNewCaseModal = (advocate = null) => {
+  const openNewCaseModal = (advocate = null, preSelectedSlot = null) => {
     setSelectedAdvocate(advocate);
-    setSelectedSlot(null);
+    setSelectedSlot(preSelectedSlot);
     setCaseForm({ title: "", category: "Civil", description: "" });
     setDocuments([]);
     setMessage("");
@@ -244,14 +244,14 @@ function ClientDashboard() {
           }
         }
 
-        setMessage("Case Registered & Preferred Consultation Slot Reserved Successfully!");
+        setMessage("Case Registered & Consultation Slot Reserved Successfully!");
         fetchClientCases(user.id || user._id);
         fetchClientAppointments(user.id || user._id);
         fetchAdvocates();
 
         setTimeout(() => {
           setShowCaseModal(false);
-          setActiveTab("cases");
+          setActiveTab("consultations");
         }, 1200);
       }
     } catch (err) {
@@ -332,10 +332,10 @@ function ClientDashboard() {
       {/* DASHBOARD HERO BANNER */}
       <section className="dashboard-banner">
         <div className="banner-content">
-          <h1>Find Verified Advocates & Manage Your Legal Cases</h1>
+          <h1>Find Verified Advocates &amp; Book Consultation Slots</h1>
           <p>
-            Browse top legal professionals, select an advocate for your legal matter,
-            upload case files, and track progress all in one secure portal.
+            Browse top legal professionals, view their consultation fees and available dates/times,
+            book consultation slots, and join online video conference calls directly.
           </p>
           <div className="banner-stats">
             <div className="stat-card">
@@ -345,6 +345,10 @@ function ClientDashboard() {
             <div className="stat-card">
               <span className="stat-number">{cases.length}</span>
               <span className="stat-label">My Registered Cases</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number">{appointments.length}</span>
+              <span className="stat-label">Booked Consultations</span>
             </div>
           </div>
         </div>
@@ -369,7 +373,7 @@ function ClientDashboard() {
             className={`tab-btn ${activeTab === "consultations" ? "active" : ""}`}
             onClick={() => setActiveTab("consultations")}
           >
-            💬 Booked Consultations({appointments.length})
+            💬 Booked Consultations ({appointments.length})
           </button>
           
           <button
@@ -404,7 +408,7 @@ function ClientDashboard() {
                   <option value="Civil">Civil Law</option>
                   <option value="Criminal">Criminal Law</option>
                   <option value="Family">Family Law</option>
-                  <option value="Property">Property & Real Estate</option>
+                  <option value="Property">Property &amp; Real Estate</option>
                   <option value="Consumer">Consumer Protection</option>
                   <option value="Cyber">Cyber Law</option>
                 </select>
@@ -420,65 +424,93 @@ function ClientDashboard() {
               </div>
             ) : (
               <div className="advocates-grid">
-                {filteredAdvocates.map((adv) => (
-                  <div className="advocate-card" key={adv._id || adv.id}>
-                    <div className="advocate-header">
-                      <div className="advocate-avatar">⚖</div>
-                      <div className="advocate-info">
-                        <h3>{adv.name}</h3>
-                        <span className="specialization-tag">
-                          {adv.specialization || "General Legal Practice"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="advocate-body">
-                      <p className="advocate-bio">{adv.bio || "Experienced advocate dedicated to handling legal matters with transparency and expertise."}</p>
-                      <div className="advocate-details">
-                        <div>
-                          <strong>Bar Council ID:</strong> <span className="bar-id-pill">📜 {adv.barCouncilId || "N/A"}</span>
-                        </div>
-                        <div>
-                          <strong>Enrollment Year:</strong> 📅 {adv.enrollmentYear || "N/A"}
-                        </div>
-                        <div>
-                          <strong>Years of Experience:</strong> <strong style={{color: '#047857'}}>🎖 {adv.experience !== undefined ? adv.experience : (adv.enrollmentYear ? Math.max(0, new Date().getFullYear() - adv.enrollmentYear) : 0)} Years</strong>
-                        </div>
-                        <div>
-                          <strong>Verification Status:</strong>{" "}
-                          <span className={`status-pill status-${(adv.advocateStatus || "Pending Verification").toLowerCase().replace(/\s+/g, '-')}`}>
-                            {adv.advocateStatus || "Pending Verification"}
+                {filteredAdvocates.map((adv) => {
+                  const openSlots = (adv.availableSlots || []).filter((s) => !s.isBooked);
+                  return (
+                    <div className="advocate-card" key={adv._id || adv.id}>
+                      <div className="advocate-header">
+                        <div className="advocate-avatar">⚖</div>
+                        <div className="advocate-info">
+                          <h3>{adv.name}</h3>
+                          <span className="specialization-tag">
+                            {adv.specialization || "General Legal Practice"}
                           </span>
                         </div>
-                        {adv.availableSlots && adv.availableSlots.filter((s) => !s.isBooked).length > 0 && (
-                          <div className="slots-badge-row">
-                            <strong>Preferred Slots:</strong>{" "}
-                            <span className="slots-open-badge">
-                              📅 {adv.availableSlots.filter((s) => !s.isBooked).length} Booking Slots Available
+                      </div>
+
+                      <div className="advocate-body">
+                        <p className="advocate-bio">{adv.bio || "Experienced advocate dedicated to handling legal matters with transparency and expertise."}</p>
+                        
+                        <div className="advocate-details">
+                          <div>
+                            <strong>Hourly Consultation Fee:</strong>{" "}
+                            <span className="fee-highlight-badge">
+                              💵 {adv.consultationFee ? `₹${adv.consultationFee} / hr` : "Fee Not Set"}
                             </span>
                           </div>
-                        )}
-                        <div>
-                          <strong>Email:</strong> ✉ {adv.email}
-                        </div>
-                        {adv.phone && (
+
                           <div>
-                            <strong>Phone:</strong> 📞 {adv.phone}
+                            <strong>Bar Council ID:</strong> <span className="bar-id-pill">📜 {adv.barCouncilId || "N/A"}</span>
                           </div>
-                        )}
+                          <div>
+                            <strong>Enrollment Year:</strong> 📅 {adv.enrollmentYear || "N/A"}
+                          </div>
+                          <div>
+                            <strong>Years of Experience:</strong> <strong style={{color: '#047857'}}>🎖 {adv.experience !== undefined ? adv.experience : (adv.enrollmentYear ? Math.max(0, new Date().getFullYear() - adv.enrollmentYear) : 0)} Years</strong>
+                          </div>
+                          <div>
+                            <strong>Verification Status:</strong>{" "}
+                            <span className={`status-pill status-${(adv.advocateStatus || "Pending Verification").toLowerCase().replace(/\s+/g, '-')}`}>
+                              {adv.advocateStatus || "Pending Verification"}
+                            </span>
+                          </div>
+                          <div>
+                            <strong>Email:</strong> ✉ {adv.email}
+                          </div>
+                          {adv.phone && (
+                            <div>
+                              <strong>Phone:</strong> 📞 {adv.phone}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* AVAILABLE SLOTS DISPLAY BEFORE BOOKING */}
+                        <div className="available-slots-preview">
+                          <strong>📅 Available Consultation Slots ({openSlots.length}):</strong>
+                          {openSlots.length === 0 ? (
+                            <p className="no-slots-avail-text">No pre-set slots. You can still request a custom date &amp; time upon booking.</p>
+                          ) : (
+                            <div className="slots-chip-list">
+                              {openSlots.slice(0, 4).map((s) => (
+                                <button
+                                  type="button"
+                                  key={s.slotId}
+                                  className="slot-preview-chip"
+                                  onClick={() => openNewCaseModal(adv, s)}
+                                  title="Click to book this slot"
+                                >
+                                  📅 {s.date} | ⏰ {s.startTime} {s.fee ? `(₹${s.fee})` : ""}
+                                </button>
+                              ))}
+                              {openSlots.length > 4 && (
+                                <span className="more-slots-tag">+{openSlots.length - 4} more slots</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="advocate-footer">
+                        <button
+                          className="select-advocate-btn"
+                          onClick={() => openNewCaseModal(adv)}
+                        >
+                          Book Consultation &amp; Send File ➔
+                        </button>
                       </div>
                     </div>
-
-                    <div className="advocate-footer">
-                      <button
-                        className="select-advocate-btn"
-                        onClick={() => openNewCaseModal(adv)}
-                      >
-                        Select Advocate &amp; Send File ➔
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -533,29 +565,29 @@ function ClientDashboard() {
                       </div>
                     </div>
 
-                    {/* CASE-BOUND SCHEDULED HEARING SLOT & GITTER MEETING ROOM */}
+                    {/* CASE-BOUND SCHEDULED HEARING SLOT & MEETING ROOM */}
                     {(c.hearingDate || c.meetingLink) && (
-                      <div className="client-gitter-box">
-                        <div className="gitter-header">
-                          <span className="gitter-icon">📅</span>
+                      <div className="client-meeting-box">
+                        <div className="meeting-header">
+                          <span className="meeting-icon">📅</span>
                           <div>
                             <h4>Scheduled Case Hearing &amp; Consultation Slot</h4>
                             <p>
-                              <strong>Date:</strong> {c.hearingDate || "TBD"} @ <strong>Time:</strong> {c.hearingTime || "TBD"} ({c.duration || 30} Mins | Fee: ₹{c.consultationFee || 500})
+                              <strong>Date:</strong> {c.hearingDate || "TBD"} @ <strong>Time:</strong> {c.hearingTime || "TBD"} ({c.duration || 30} Mins | Fee: {c.consultationFee ? `₹${c.consultationFee}` : "Not Specified"})
                             </p>
                           </div>
                         </div>
 
                         {c.meetingLink && (
-                          <div className="gitter-action-bar">
-                            <span className="meeting-url-text">Gitter Room URL: <code>{c.meetingLink}</code></span>
+                          <div className="meeting-action-bar">
+                            <span className="meeting-url-text">Conference URL: <code>{c.meetingLink}</code></span>
                             <a
                               href={c.meetingLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="client-gitter-join-btn"
+                              className="client-meeting-join-btn"
                             >
-                              🎥 Join Gitter Online Hearing Room ➔
+                              🎥 Join Online Hearing Room ➔
                             </a>
                           </div>
                         )}
@@ -614,13 +646,13 @@ function ClientDashboard() {
           </div>
         )}
 
-        {/* TAB 3: BOOKED CONSULTATIONS & GITTER MEETING LINKS */}
+        {/* TAB 3: BOOKED CONSULTATIONS & CONFERENCE CALL LINKS */}
         {activeTab === "consultations" && (
           <div className="tab-content">
             {appointments.length === 0 ? (
               <div className="empty-state">
                 <h3>No Booked Consultations Found</h3>
-                <p>When you select an advocate and request a consultation slot, your meeting schedule and Gitter links will appear here.</p>
+                <p>When you select an advocate and request a consultation slot, your meeting schedule and conference-call links will appear here.</p>
               </div>
             ) : (
               <div className="cases-list">
@@ -649,44 +681,44 @@ function ClientDashboard() {
 
                     <div className="case-meta">
                       <div className="meta-item">
-                        <strong>📅 Scheduled Date:</strong> {appt.appointmentDate || "Pending Allotment"}
+                        <strong>📅 Scheduled Date:</strong> {appt.appointmentDate || "Pending Confirmation"}
                       </div>
                       <div className="meta-item">
-                        <strong>⏰ Scheduled Time:</strong> {appt.appointmentTime || "Pending Allotment"}
+                        <strong>⏰ Scheduled Time:</strong> {appt.appointmentTime || "Pending Confirmation"}
                       </div>
                       <div className="meta-item">
                         <strong>⏱ Duration:</strong> {appt.duration || 30} Mins
                       </div>
                       <div className="meta-item">
-                        <strong>💵 Fee:</strong> ₹{appt.consultationFee || 0}
+                        <strong>💵 Consultation Fee:</strong> {appt.consultationFee ? `₹${appt.consultationFee}` : "Not Specified"}
                       </div>
                     </div>
 
-                    {/* GITTER MEETING ROOM SECTION FOR APPROVED APPOINTMENTS */}
+                    {/* CONFERENCE CALL MEETING ROOM SECTION FOR APPROVED APPOINTMENTS */}
                     {appt.status === "Approved" && (
-                      <div className="client-gitter-box">
-                        <div className="gitter-header">
-                          <span className="gitter-icon">💬</span>
+                      <div className="client-meeting-box">
+                        <div className="meeting-header">
+                          <span className="meeting-icon">💬</span>
                           <div>
-                            <h4>Online Legal Consultation Room Ready!</h4>
-                            <p>Your advocate has approved this slot and generated an online Gitter consultation room.</p>
+                            <h4>Online Legal Consultation Call Ready!</h4>
+                            <p>Your advocate has confirmed this slot and shared a conference-call meeting link.</p>
                           </div>
                         </div>
 
                         {appt.meetingLink ? (
-                          <div className="gitter-action-bar">
-                            <span className="meeting-url-text">Room URL: <code>{appt.meetingLink}</code></span>
+                          <div className="meeting-action-bar">
+                            <span className="meeting-url-text">Meeting URL: <code>{appt.meetingLink}</code></span>
                             <a
                               href={appt.meetingLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="client-gitter-join-btn"
+                              className="client-meeting-join-btn"
                             >
-                              🎥 Join Gitter Meeting Room ➔
+                              🎥 Join Conference Call ➔
                             </a>
                           </div>
                         ) : (
-                          <p className="no-link-text">Meeting link will be updated shortly by your advocate.</p>
+                          <p className="no-link-text">Conference call link will be provided shortly by your advocate.</p>
                         )}
                       </div>
                     )}
@@ -712,12 +744,12 @@ function ClientDashboard() {
         )}
       </div>
 
-      {/* REGISTER NEW CASE MODAL */}
+      {/* REGISTER NEW CASE & BOOK CONSULTATION SLOT MODAL */}
       {showCaseModal && (
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h2>Register New Case &amp; Send Documents</h2>
+              <h2>Register New Case &amp; Book Consultation Slot</h2>
               <button className="modal-close" onClick={() => setShowCaseModal(false)}>
                 ✕
               </button>
@@ -728,6 +760,9 @@ function ClientDashboard() {
                 <div>
                   <span>Selected Advocate:</span>
                   <strong>👨‍⚖ {selectedAdvocate.name}</strong> ({selectedAdvocate.specialization})
+                  <span className="banner-fee-tag">
+                    💵 Fee: {selectedAdvocate.consultationFee ? `₹${selectedAdvocate.consultationFee}/hr` : "Fee Not Set"}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -745,17 +780,17 @@ function ClientDashboard() {
                   <option value="">-- Choose an Advocate --</option>
                   {advocates.map((adv) => (
                     <option key={adv._id || adv.id} value={adv._id || adv.id}>
-                      {adv.name} - {adv.specialization}
+                      {adv.name} - {adv.specialization} ({adv.consultationFee ? `₹${adv.consultationFee}/hr` : "Fee Not Set"})
                     </option>
                   ))}
                 </select>
               </div>
             )}
 
-            {/* PREFERRED AVAILABLE SLOTS SELECTOR */}
+            {/* PREFERRED AVAILABLE SLOTS SELECTOR BEFORE BOOKING */}
             {selectedAdvocate && selectedAdvocate.availableSlots && selectedAdvocate.availableSlots.filter((s) => !s.isBooked).length > 0 && (
               <div className="client-slot-picker-box">
-                <label><strong>📅 Select Advocate's Preferred Booking Slot (Optional):</strong></label>
+                <label><strong>📅 Select Advocate's Available Consultation Slot:</strong></label>
                 <div className="client-slot-chips">
                   {selectedAdvocate.availableSlots
                     .filter((s) => !s.isBooked)
@@ -768,14 +803,14 @@ function ClientDashboard() {
                           className={`client-slot-chip ${isSelected ? "selected" : ""}`}
                           onClick={() => setSelectedSlot(isSelected ? null : s)}
                         >
-                          {isSelected ? "✓ " : ""}📅 {s.date} | ⏰ {s.startTime} - {s.endTime} (₹{s.fee})
+                          {isSelected ? "✓ " : ""}📅 {s.date} | ⏰ {s.startTime} - {s.endTime} ({s.fee ? `₹${s.fee}` : "Fee Not Specified"})
                         </button>
                       );
                     })}
                 </div>
                 {selectedSlot && (
                   <p className="selected-slot-notice">
-                    ✓ Reserved Slot: <strong>{selectedSlot.date} @ {selectedSlot.startTime}</strong> (Fee: ₹{selectedSlot.fee})
+                    ✓ Selected Slot: <strong>{selectedSlot.date} @ {selectedSlot.startTime} - {selectedSlot.endTime}</strong> (Fee: {selectedSlot.fee ? `₹${selectedSlot.fee}` : "Not Specified"})
                   </p>
                 )}
               </div>
@@ -792,7 +827,7 @@ function ClientDashboard() {
                 <label>Case Subject / Title *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Property Dispute & Ownership Verification"
+                  placeholder="e.g. Property Dispute &amp; Ownership Verification"
                   value={caseForm.title}
                   onChange={(e) => setCaseForm({ ...caseForm, title: e.target.value })}
                   required
@@ -873,7 +908,7 @@ function ClientDashboard() {
                   className="submit-btn"
                   disabled={submitting}
                 >
-                  {submitting ? "Submitting Case..." : "Submit Case & Send Files"}
+                  {submitting ? "Submitting Case..." : "Submit Case &amp; Book Consultation"}
                 </button>
               </div>
             </form>

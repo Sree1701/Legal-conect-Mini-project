@@ -14,16 +14,24 @@ exports.bookAppointment = async (req, res) => {
             client,
             advocate,
             issue,
-            description
+            description,
+            consultationFee
 
         } = req.body;
+
+        const User = require("../models/User");
+        const advocateUser = await User.findById(advocate);
+        const feeToSet = (consultationFee !== undefined && consultationFee !== null && consultationFee !== "")
+            ? Number(consultationFee)
+            : (advocateUser?.consultationFee ?? null);
 
         const appointment = new Appointment({
 
             client,
             advocate,
             issue,
-            description
+            description,
+            consultationFee: feeToSet
 
         });
 
@@ -391,6 +399,12 @@ exports.bookAdvocateSlot = async (req, res) => {
             });
         }
 
+        const calculatedFee = slot && (slot.fee !== undefined && slot.fee !== null)
+            ? slot.fee
+            : (req.body.consultationFee !== undefined && req.body.consultationFee !== null && req.body.consultationFee !== ""
+                ? Number(req.body.consultationFee)
+                : (advocateUser.consultationFee ?? null));
+
         const appointment = new Appointment({
             client,
             advocate,
@@ -399,7 +413,7 @@ exports.bookAdvocateSlot = async (req, res) => {
             appointmentDate: slot ? slot.date : req.body.appointmentDate || null,
             appointmentTime: slot ? slot.startTime : req.body.appointmentTime || "",
             duration: slot ? slot.duration : req.body.duration || 30,
-            consultationFee: slot ? slot.fee : req.body.consultationFee || advocateUser.consultationFee || 500,
+            consultationFee: calculatedFee,
             status: "Pending",
         });
 

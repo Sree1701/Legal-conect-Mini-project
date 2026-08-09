@@ -80,7 +80,7 @@ const userSchema = new mongoose.Schema(
 
     consultationFee: {
         type: Number,
-        default: 0,
+        default: null,
     },
 
     availableSlots: [
@@ -109,7 +109,7 @@ const userSchema = new mongoose.Schema(
             },
             fee: {
                 type: Number,
-                default: 500,
+                default: null,
             },
             isBooked: {
                 type: Boolean,

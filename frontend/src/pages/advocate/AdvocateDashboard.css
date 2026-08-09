@@ -1266,7 +1266,7 @@
   }
 }
 
-/* GITTER MEETING LINK STYLES */
+/* ONLINE MEETING LINK STYLES */
 .input-with-button-row {
   display: flex;
   gap: 10px;
@@ -1305,7 +1305,7 @@
   gap: 10px;
 }
 
-.gitter-link-btn {
+.call-link-btn {
   background: #0B4F75;
   color: #ffffff;
   padding: 6px 14px;
@@ -1319,6 +1319,178 @@
   transition: background 0.2s ease;
 }
 
-.gitter-link-btn:hover {
+.call-link-btn:hover {
   background: #083B59;
 }
+
+/* ==========================================
+   AVAILABILITY & SLOT MANAGEMENT STYLES
+========================================== */
+.adv-slot-management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.slot-form-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(11, 79, 117, 0.08);
+  border-left: 4px solid #0B4F75;
+}
+
+.slot-form-card h4 {
+  color: #0B4F75;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.form-subtext {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 18px;
+}
+
+.slot-inner-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.add-slot-submit-btn {
+  background: #0B4F75;
+  color: #ffffff;
+  border: none;
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.2s ease;
+}
+
+.add-slot-submit-btn:hover {
+  background: #083B59;
+}
+
+.add-slot-submit-btn.gold-btn {
+  background: #FFD54F;
+  color: #0B4F75;
+}
+
+.add-slot-submit-btn.gold-btn:hover {
+  background: #ffca28;
+}
+
+.configured-slots-section {
+  margin-top: 30px;
+}
+
+.configured-slots-section .sub-title {
+  font-size: 18px;
+  color: #0B4F75;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.slots-grid-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.slot-card-item {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(11, 79, 117, 0.06);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.slot-card-item.available-slot {
+  border-left: 4px solid #10b981;
+}
+
+.slot-card-item.booked-slot {
+  border-left: 4px solid #f59e0b;
+  background: #fffbeb;
+}
+
+.slot-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot-date-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0B4F75;
+}
+
+.slot-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.slot-status-pill.free {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.slot-status-pill.booked {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.slot-time-text {
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.slot-meta-text {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.delete-slot-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.2s ease;
+}
+
+.delete-slot-btn:hover {
+  background: #fca5a5;
+}
+
+.booked-by-subtext {
+  font-size: 11.5px;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.input-help-text {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
+}
+
