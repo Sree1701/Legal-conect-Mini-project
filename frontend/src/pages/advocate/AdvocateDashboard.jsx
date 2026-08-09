@@ -871,7 +871,19 @@ function AdvocateDashboard() {
                                 <span>💵 <strong>Fee:</strong> {c.consultationFee ? `₹${c.consultationFee}` : "Not Specified"}</span>
                               </div>
 
-                              
+                              {c.meetingLink && (
+                                <div className="meeting-link-row">
+                                  <span>💬 <strong>Conference Link:</strong> <code>{c.meetingLink}</code></span>
+                                  <a
+                                    href={c.meetingLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="call-link-btn"
+                                  >
+                                    🎥 Join Conference Call ➔
+                                  </a>
+                                </div>
+                              )}
 
                               {c.advocateNotes && (
                                 <p className="slot-notes-text">
