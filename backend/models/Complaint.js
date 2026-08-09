@@ -54,9 +54,12 @@ const complaintSchema = new mongoose.Schema(
         enum: [
             "Pending",
             "Assigned",
-            "In Progress",
-            "Hearing Scheduled",
             "Under Review",
+            "In Progress",
+            "Hearing Scheduled in Court",
+            "Case Resolved",
+            "Case Closed",
+            "Hearing Scheduled",
             "Resolved",
             "Closed"
         ],

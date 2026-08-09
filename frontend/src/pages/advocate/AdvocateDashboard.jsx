@@ -224,7 +224,7 @@ function AdvocateDashboard() {
       consultationFee: c.consultationFee !== undefined && c.consultationFee !== null ? c.consultationFee : (user?.consultationFee || ""),
       meetingLink: c.meetingLink || defaultMeetingLink,
       advocateNotes: c.advocateNotes || "",
-      status: c.status === "Pending" || c.status === "Assigned" ? "Hearing Scheduled" : c.status,
+      status: c.status === "Pending" || c.status === "Assigned" ? "Hearing Scheduled in Court" : c.status,
     });
   };
 
@@ -412,7 +412,7 @@ function AdvocateDashboard() {
   });
 
   const pendingRequestsCount = appointments.filter((a) => a.status === "Pending").length;
-  const scheduledCasesCount = cases.filter((c) => c.hearingDate || c.status === "Hearing Scheduled").length;
+  const scheduledCasesCount = cases.filter((c) => c.hearingDate || c.status === "Hearing Scheduled in Court" || c.status === "Hearing Scheduled").length;
   const openSlotsCount = availableSlots.filter((s) => !s.isBooked).length;
 
   return (
@@ -813,11 +813,11 @@ function AdvocateDashboard() {
                     >
                       <option value="All">All Statuses</option>
                       <option value="Assigned">Assigned</option>
-                      <option value="Hearing Scheduled">Hearing Scheduled</option>
-                      <option value="In Progress">In Progress</option>
                       <option value="Under Review">Under Review</option>
-                      <option value="Resolved">Resolved</option>
-                      <option value="Closed">Closed</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Hearing Scheduled in Court">Hearing Scheduled in Court</option>
+                      <option value="Case Resolved">Case Resolved</option>
+                      <option value="Case Closed">Case Closed</option>
                     </select>
                   </div>
                 </div>
@@ -905,11 +905,11 @@ function AdvocateDashboard() {
                             onChange={(e) => handleUpdateCaseStatus(c._id, e.target.value)}
                           >
                             <option value="Assigned">Assigned</option>
-                            <option value="Hearing Scheduled">Hearing Scheduled</option>
-                            <option value="In Progress">In Progress</option>
                             <option value="Under Review">Under Review</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Closed">Closed</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Hearing Scheduled in Court">Hearing Scheduled in Court</option>
+                            <option value="Case Resolved">Case Resolved</option>
+                            <option value="Case Closed">Case Closed</option>
                           </select>
                         </div>
 
@@ -1253,11 +1253,11 @@ function AdvocateDashboard() {
                   }
                 >
                   <option value="Assigned">Assigned</option>
-                  <option value="Hearing Scheduled">Hearing Scheduled</option>
-                  <option value="In Progress">In Progress</option>
                   <option value="Under Review">Under Review</option>
-                  <option value="Resolved">Resolved</option>
-                  <option value="Closed">Closed</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Hearing Scheduled in Court">Hearing Scheduled in Court</option>
+                  <option value="Case Resolved">Case Resolved</option>
+                  <option value="Case Closed">Case Closed</option>
                 </select>
               </div>
 
