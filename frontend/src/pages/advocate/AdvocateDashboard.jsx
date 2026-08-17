@@ -1235,7 +1235,7 @@ function AdvocateDashboard() {
                     onClick={() => {
                       setCaseSlotForm({
                         ...caseSlotForm,
-                        meetingLink: `https://meet.jit.si/LegalConnect-Case-${._id}`,
+                        meetingLink: `https://meet.jit.si/LegalConnect-Case-${selectedCaseForSlot._id}`,
                       });
                     }}
                   >
