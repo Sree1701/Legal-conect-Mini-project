@@ -320,11 +320,48 @@ function ClientDashboard() {
     setShowPaymentModal(true);
   };
 
-  const handlePaymentSuccess = () => {
-    if (user) {
-      fetchClientAppointments(user.id || user._id);
-      fetchClientCases(user.id || user._id);
+  const handlePaymentSuccess = (paymentObj) => {
+    const clientId = user?.id || user?._id;
+
+    // Optimistically update appointment state
+    if (paymentData?.appointmentId) {
+      setAppointments((prevAppts) =>
+        prevAppts.map((appt) => {
+          if (String(appt._id) === String(paymentData.appointmentId)) {
+            return {
+              ...appt,
+              paymentStatus: "Paid",
+              status: appt.status === "Pending" ? "Approved" : appt.status,
+              meetingLink: appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`,
+            };
+          }
+          return appt;
+        })
+      );
     }
+
+    // Optimistically update complaint state
+    if (paymentData?.complaintId) {
+      setCases((prevCases) =>
+        prevCases.map((c) => {
+          if (String(c._id) === String(paymentData.complaintId)) {
+            return {
+              ...c,
+              paymentStatus: "Paid",
+              meetingLink: c.meetingLink || `https://meet.jit.si/LegalConnect-Case-${c._id}`,
+            };
+          }
+          return c;
+        })
+      );
+    }
+
+    if (clientId) {
+      fetchClientAppointments(clientId);
+      fetchClientCases(clientId);
+    }
+
+    setActiveTab("consultations");
   };
 
   const handleOpenRateModal = (adv) => {
@@ -665,43 +702,41 @@ function ClientDashboard() {
                           </div>
                         </div>
 
-                        {c.meetingLink && (
-                          c.paymentStatus === "Paid" ? (
-                            <div className="meeting-action-bar">
-                              <span className="meeting-url-text">Conference URL: <code>{c.meetingLink}</code></span>
-                              <a
-                                href={c.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="client-meeting-join-btn"
-                              >
-                                🎥 Join Online Hearing Room ➔
-                              </a>
+                        {(c.paymentStatus || "").toLowerCase() === "paid" ? (
+                          <div className="meeting-action-bar">
+                            <span className="meeting-url-text">Conference URL: <code>{c.meetingLink || `https://meet.jit.si/LegalConnect-Case-${c._id}`}</code></span>
+                            <a
+                              href={c.meetingLink || `https://meet.jit.si/LegalConnect-Case-${c._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="client-meeting-join-btn"
+                            >
+                              🎥 Join Online Hearing Room ➔
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                              <span className="fw-bold text-dark d-block">🔒 Online Hearing Room Link Hidden</span>
+                              <span className="small text-muted">
+                                Case consultation fee of <strong>₹{c.consultationFee || 500}</strong> must be paid to unlock the live video call room.
+                              </span>
                             </div>
-                          ) : (
-                            <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                              <div>
-                                <span className="fw-bold text-dark d-block">🔒 Online Hearing Room Link Hidden</span>
-                                <span className="small text-muted">
-                                  Case consultation fee of <strong>₹{c.consultationFee || 500}</strong> must be paid to unlock the live video call room.
-                                </span>
-                              </div>
-                              <button
-                                className="btn btn-success fw-bold shadow-sm"
-                                onClick={() => {
-                                  setPaymentData({
-                                    complaintId: c._id,
-                                    amount: c.consultationFee || 500,
-                                    advocateId: c.advocate?._id || c.advocate?.id,
-                                    clientId: user?.id || user?._id,
-                                  });
-                                  setShowPaymentModal(true);
-                                }}
-                              >
-                                💳 Pay ₹{c.consultationFee || 500} to Unlock Call
-                              </button>
-                            </div>
-                          )
+                            <button
+                              className="btn btn-success fw-bold shadow-sm"
+                              onClick={() => {
+                                setPaymentData({
+                                  complaintId: c._id,
+                                  amount: c.consultationFee || 500,
+                                  advocateId: c.advocate?._id || c.advocate?.id,
+                                  clientId: user?.id || user?._id,
+                                });
+                                setShowPaymentModal(true);
+                              }}
+                            >
+                              💳 Pay ₹{c.consultationFee || 500} to Unlock Call
+                            </button>
+                          </div>
                         )}
 
                         {c.advocateNotes && (
@@ -777,7 +812,7 @@ function ClientDashboard() {
                   const adv = appt.advocate || {};
                   const advName = adv.fullName || adv.name || "Advocate";
                   const advInitial = advName.charAt(0).toUpperCase();
-                  const isPaid = appt.paymentStatus === "Paid";
+                  const isPaid = (appt.paymentStatus || "").toLowerCase() === "paid";
                   const feeVal = appt.consultationFee || adv.consultationFee || 500;
                   const openSlots = (adv.availableSlots || []).filter((s) => !s.isBooked);
                   const chosenSlot = selectedSlotsForAppt[appt._id] || "";
@@ -869,37 +904,35 @@ function ClientDashboard() {
                         </div>
 
                         {/* JITSI CONFERENCE MEETING LINK - WORKABLE IF PAID, HIDDEN IF NOT */}
-                        {appt.meetingLink && (
-                          isPaid ? (
-                            <div className="of-meeting-link-banner">
-                              <span className="of-meeting-link-text">
-                                ✓ Video Meeting Link Unlocked: <code>{appt.meetingLink}</code>
+                        {isPaid ? (
+                          <div className="of-meeting-link-banner">
+                            <span className="of-meeting-link-text">
+                              ✓ Video Meeting Link Unlocked: <code>{appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`}</code>
+                            </span>
+                            <a
+                              href={appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="of-join-jitsi-btn"
+                            >
+                              🎥 Join Conference Call ➔
+                            </a>
+                          </div>
+                        ) : (
+                          <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                              <span className="fw-bold text-dark d-block">🔒 Video Consultation Call Link Hidden</span>
+                              <span className="small text-muted">
+                                Advocate consultation fee of <strong>₹{feeVal}</strong> (set for this meeting time duration) must be paid to unlock your live video call link.
                               </span>
-                              <a
-                                href={appt.meetingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="of-join-jitsi-btn"
-                              >
-                                🎥 Join Conference Call ➔
-                              </a>
                             </div>
-                          ) : (
-                            <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                              <div>
-                                <span className="fw-bold text-dark d-block">🔒 Video Consultation Call Link Hidden</span>
-                                <span className="small text-muted">
-                                  Advocate consultation fee of <strong>₹{feeVal}</strong> (set for this meeting time duration) must be paid to unlock your live video call link.
-                                </span>
-                              </div>
-                              <button
-                                className="btn btn-success fw-bold shadow-sm"
-                                onClick={() => handleOpenPaymentModal(appt)}
-                              >
-                                💳 Pay ₹{feeVal} to Unlock Call
-                              </button>
-                            </div>
-                          )
+                            <button
+                              className="btn btn-success fw-bold shadow-sm"
+                              onClick={() => handleOpenPaymentModal(appt)}
+                            >
+                              💳 Pay ₹{feeVal} to Unlock Call
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1191,7 +1224,9 @@ function ClientDashboard() {
       {/* PAYMENT GATEWAY MODAL */}
       <PaymentModal
         isOpen={showPaymentModal}
-       
+        onClose={() => setShowPaymentModal(false)}
+        consultationData={paymentData}
+        onSuccess={handlePaymentSuccess}
       />
 
       {/* FLOATING AI ASSISTANT TRIGGER BUTTON (FOR LOGGED IN CLIENTS ONLY) */}

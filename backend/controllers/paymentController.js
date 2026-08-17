@@ -37,6 +37,12 @@ exports.processPayment = async (req, res) => {
                 });
             }
             appointment.paymentStatus = "Paid";
+            if (!appointment.meetingLink) {
+                appointment.meetingLink = `https://meet.jit.si/LegalConnect-Consultation-${appointment._id}`;
+            }
+            if (appointment.status === "Pending") {
+                appointment.status = "Approved";
+            }
             await appointment.save();
             appointmentRef = appointment._id;
         }
@@ -46,9 +52,37 @@ exports.processPayment = async (req, res) => {
             const complaint = await Complaint.findById(complaintId);
             if (complaint) {
                 complaint.paymentStatus = "Paid";
+                if (!complaint.meetingLink) {
+                    complaint.meetingLink = `https://meet.jit.si/LegalConnect-Case-${complaint._id}`;
+                }
                 await complaint.save();
                 complaintRef = complaint._id;
             }
+        }
+
+        // If payment is directly for an Advocate (without prior appointment ID)
+        if (!appointmentId && !complaintId && clientId && advocateId) {
+            let appt = await Appointment.findOne({ client: clientId, advocate: advocateId, paymentStatus: "Pending" });
+            if (!appt) {
+                appt = new Appointment({
+                    client: clientId,
+                    advocate: advocateId,
+                    issue: "Direct Advocate Legal Consultation",
+                    description: "Paid consultation with advocate",
+                    consultationFee: Number(amount),
+                    status: "Approved",
+                    paymentStatus: "Paid",
+                    meetingLink: `https://meet.jit.si/LegalConnect-Consultation-${Date.now()}`
+                });
+            } else {
+                appt.paymentStatus = "Paid";
+                appt.status = "Approved";
+                if (!appt.meetingLink) {
+                    appt.meetingLink = `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`;
+                }
+            }
+            await appt.save();
+            appointmentRef = appt._id;
         }
 
         const last4 = cardNumber ? cardNumber.replace(/\s+/g, "").slice(-4) : "1234";
