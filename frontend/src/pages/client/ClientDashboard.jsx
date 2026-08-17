@@ -1191,9 +1191,7 @@ function ClientDashboard() {
       {/* PAYMENT GATEWAY MODAL */}
       <PaymentModal
         isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        consultationData={paymentData}
-        onSuccess={handlePaymentSuccess}
+       
       />
 
       {/* FLOATING AI ASSISTANT TRIGGER BUTTON (FOR LOGGED IN CLIENTS ONLY) */}
