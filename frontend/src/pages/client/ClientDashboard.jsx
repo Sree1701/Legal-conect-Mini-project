@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { bookAppointment, bookAdvocateSlot, getClientAppointments } from "../../services/appointmentService";
 import AILegalAssistant from "../../components/AILegalAssistant";
+import PaymentModal from "../../components/PaymentModal";
 import "./ClientDashboard.css";
 
 function ClientDashboard() {
@@ -32,6 +33,19 @@ function ClientDashboard() {
   // Modal State for Adding Document to existing case
   const [selectedCaseForUpload, setSelectedCaseForUpload] = useState(null);
   const [newDocument, setNewDocument] = useState({ name: "", fileData: "", size: "" });
+
+  // Payment Gateway Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentData, setPaymentData] = useState(null);
+
+  // Advocate Rating Modal State
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [ratingAdvocate, setRatingAdvocate] = useState(null);
+  const [ratingStars, setRatingStars] = useState(5);
+  const [ratingComment, setRatingComment] = useState("");
+
+  // Selected Slots tracking map per appointment
+  const [selectedSlotsForAppt, setSelectedSlotsForAppt] = useState({});
 
   // Legal AI Assistant State
   const [aiChatMessages, setAiChatMessages] = useState([
@@ -296,13 +310,73 @@ function ClientDashboard() {
     reader.readAsDataURL(file);
   };
 
+  const handleOpenPaymentModal = (appt) => {
+    setPaymentData({
+      appointmentId: appt._id,
+      amount: appt.consultationFee || appt.advocate?.consultationFee || 500,
+      advocateId: appt.advocate?._id || appt.advocate?.id,
+      clientId: user?.id || user?._id,
+    });
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    if (user) {
+      fetchClientAppointments(user.id || user._id);
+      fetchClientCases(user.id || user._id);
+    }
+  };
+
+  const handleOpenRateModal = (adv) => {
+    setRatingAdvocate(adv);
+    setRatingStars(5);
+    setRatingComment("");
+    setShowRateModal(true);
+  };
+
+  const handleRatingSubmit = (e) => {
+    e.preventDefault();
+    alert(`Thank you for rating Advocate ${ratingAdvocate?.fullName || ratingAdvocate?.name || "Advocate"}! Your feedback has been recorded.`);
+    setShowRateModal(false);
+  };
+
+  const handleBookVideoSlot = async (appt, slotId) => {
+    if (!slotId) {
+      alert("Please select an available consultation slot from the dropdown.");
+      return;
+    }
+
+    try {
+      const advId = appt.advocate?._id || appt.advocate?.id;
+      const clientId = user?.id || user?._id;
+
+      if (slotId !== "current") {
+        await bookAdvocateSlot({
+          client: clientId,
+          advocate: advId,
+          slotId: slotId,
+          issue: appt.issue || "Live Video Consultation",
+        });
+      }
+
+      alert("Live Video Consultation Slot booked successfully!");
+      if (user) {
+        fetchClientAppointments(user.id || user._id);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to book video slot.");
+    }
+  };
+
   const filteredAdvocates = advocates.filter((adv) => {
-    const matchesSearch =
-      adv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      adv.specialization.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      categoryFilter === "All" ||
-      adv.specialization.toLowerCase().includes(categoryFilter.toLowerCase());
+    if (!adv) return false;
+    const nameStr = (adv.name || adv.fullName || "").toLowerCase();
+    const specStr = (adv.specialization || "").toLowerCase();
+    const queryStr = (searchQuery || "").toLowerCase();
+    const catStr = (categoryFilter || "All").toLowerCase();
+
+    const matchesSearch = nameStr.includes(queryStr) || specStr.includes(queryStr);
+    const matchesCategory = catStr === "all" || specStr.includes(catStr);
     return matchesSearch && matchesCategory;
   });
 
@@ -431,7 +505,7 @@ function ClientDashboard() {
                       <div className="advocate-header">
                         <div className="advocate-avatar">⚖</div>
                         <div className="advocate-info">
-                          <h3>{adv.name}</h3>
+                          <h3>{adv.name || adv.fullName || "Advocate"}</h3>
                           <span className="specialization-tag">
                             {adv.specialization || "General Legal Practice"}
                           </span>
@@ -500,12 +574,25 @@ function ClientDashboard() {
                         </div>
                       </div>
 
-                      <div className="advocate-footer">
+                      <div className="advocate-footer d-flex gap-2">
                         <button
-                          className="select-advocate-btn"
+                          className="select-advocate-btn flex-grow-1"
                           onClick={() => openNewCaseModal(adv)}
                         >
                           Book Consultation &amp; Send File ➔
+                        </button>
+                        <button
+                          className="btn btn-success fw-bold px-3 rounded-3"
+                          onClick={() => {
+                            setPaymentData({
+                              amount: adv.consultationFee || 500,
+                              advocateId: adv._id || adv.id,
+                              clientId: user?.id || user?._id,
+                            });
+                            setShowPaymentModal(true);
+                          }}
+                        >
+                          💳 Pay Fee (₹{adv.consultationFee || 500})
                         </button>
                       </div>
                     </div>
@@ -541,7 +628,7 @@ function ClientDashboard() {
                         <span className="case-category-badge">{c.category}</span>
                         <h3 className="case-title">{c.title}</h3>
                       </div>
-                      <span className={`status-badge status-${c.status.toLowerCase().replace(/\s+/g, '-')}`}>
+                      <span className={`status-badge status-${(c.status || "Pending").toLowerCase().replace(/\s+/g, '-')}`}>
                         {c.status}
                       </span>
                     </div>
@@ -579,17 +666,42 @@ function ClientDashboard() {
                         </div>
 
                         {c.meetingLink && (
-                          <div className="meeting-action-bar">
-                            <span className="meeting-url-text">Conference URL: <code>{c.meetingLink}</code></span>
-                            <a
-                              href={c.meetingLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="client-meeting-join-btn"
-                            >
-                              🎥 Join Online Hearing Room ➔
-                            </a>
-                          </div>
+                          c.paymentStatus === "Paid" ? (
+                            <div className="meeting-action-bar">
+                              <span className="meeting-url-text">Conference URL: <code>{c.meetingLink}</code></span>
+                              <a
+                                href={c.meetingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="client-meeting-join-btn"
+                              >
+                                🎥 Join Online Hearing Room ➔
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                              <div>
+                                <span className="fw-bold text-dark d-block">🔒 Online Hearing Room Link Hidden</span>
+                                <span className="small text-muted">
+                                  Case consultation fee of <strong>₹{c.consultationFee || 500}</strong> must be paid to unlock the live video call room.
+                                </span>
+                              </div>
+                              <button
+                                className="btn btn-success fw-bold shadow-sm"
+                                onClick={() => {
+                                  setPaymentData({
+                                    complaintId: c._id,
+                                    amount: c.consultationFee || 500,
+                                    advocateId: c.advocate?._id || c.advocate?.id,
+                                    clientId: user?.id || user?._id,
+                                  });
+                                  setShowPaymentModal(true);
+                                }}
+                              >
+                                💳 Pay ₹{c.consultationFee || 500} to Unlock Call
+                              </button>
+                            </div>
+                          )
                         )}
 
                         {c.advocateNotes && (
@@ -646,91 +758,153 @@ function ClientDashboard() {
           </div>
         )}
 
-        {/* TAB 3: BOOKED CONSULTATIONS & CONFERENCE CALL LINKS */}
+        {/* TAB 3: OFFICIAL ADVOCATE FEEDBACKS & LIVE VIDEO CONSULTATION (Image 2 Design) */}
         {activeTab === "consultations" && (
           <div className="tab-content">
+            <div className="official-feedbacks-section-header">
+              <span className="blue-bar-indicator"></span>
+              <h2>Official Advocate Feedbacks</h2>
+            </div>
+
             {appointments.length === 0 ? (
               <div className="empty-state">
-                <h3>No Booked Consultations Found</h3>
-                <p>When you select an advocate and request a consultation slot, your meeting schedule and conference-call links will appear here.</p>
+                <h3>No Advocate Feedbacks Available</h3>
+                <p>When an advocate provides legal feedback on your consultation, it will appear here.</p>
               </div>
             ) : (
-              <div className="cases-list">
-                {appointments.map((appt) => (
-                  <div className="case-card appt-card" key={appt._id}>
-                    <div className="case-card-header">
-                      <div>
-                        <span className="case-category-badge">
-                          {appt.issue ? `Issue: ${appt.issue}` : "Legal Consultation"}
-                        </span>
-                        <h3 className="case-title">
-                          👨‍⚖ Advocate: {appt.advocate?.fullName || appt.advocate?.name || "Legal Advocate"}
-                        </h3>
-                        <p className="advocate-sub-contact">
-                          {appt.advocate?.specialization || "Legal Practice"} {appt.advocate?.email ? `| ✉ ${appt.advocate.email}` : ""} {appt.advocate?.phone ? `| 📞 ${appt.advocate.phone}` : ""}
-                        </p>
-                      </div>
-                      <span className={`status-badge status-${(appt.status || "Pending").toLowerCase().replace(/\s+/g, '-')}`}>
-                        {appt.status}
-                      </span>
-                    </div>
+              <div className="official-feedbacks-list">
+                {appointments.map((appt) => {
+                  const adv = appt.advocate || {};
+                  const advName = adv.fullName || adv.name || "Advocate";
+                  const advInitial = advName.charAt(0).toUpperCase();
+                  const isPaid = appt.paymentStatus === "Paid";
+                  const feeVal = appt.consultationFee || adv.consultationFee || 500;
+                  const openSlots = (adv.availableSlots || []).filter((s) => !s.isBooked);
+                  const chosenSlot = selectedSlotsForAppt[appt._id] || "";
 
-                    <p className="case-description">
-                      <strong>Consultation Request Description:</strong> {appt.description || "No description provided."}
-                    </p>
-
-                    <div className="case-meta">
-                      <div className="meta-item">
-                        <strong>📅 Scheduled Date:</strong> {appt.appointmentDate || "Pending Confirmation"}
-                      </div>
-                      <div className="meta-item">
-                        <strong>⏰ Scheduled Time:</strong> {appt.appointmentTime || "Pending Confirmation"}
-                      </div>
-                      <div className="meta-item">
-                        <strong>⏱ Duration:</strong> {appt.duration || 30} Mins
-                      </div>
-                      <div className="meta-item">
-                        <strong>💵 Consultation Fee:</strong> {appt.consultationFee ? `₹${appt.consultationFee}` : "Not Specified"}
-                      </div>
-                    </div>
-
-                    {/* CONFERENCE CALL MEETING ROOM SECTION FOR APPROVED APPOINTMENTS */}
-                    {appt.status === "Approved" && (
-                      <div className="client-meeting-box">
-                        <div className="meeting-header">
-                          <span className="meeting-icon">💬</span>
-                          <div>
-                            <h4>Online Legal Consultation Call Ready!</h4>
-                            <p>Your advocate has confirmed this slot and shared a conference-call meeting link.</p>
+                  return (
+                    <div className="official-feedback-card-container" key={appt._id}>
+                      {/* CARD TOP HEADER ROW */}
+                      <div className="of-card-header">
+                        <div className="of-header-left">
+                          <div className="of-avatar-circle">{advInitial}</div>
+                          <div className="of-header-info">
+                            <div className="of-name-rating-line">
+                              <strong>Advocate {advName.replace(/^Advocate\s+/i, "")}</strong>
+                              <span className="of-rating-text">★ 0 (0 reviews)</span>
+                            </div>
+                            <span className="of-timestamp">
+                              {new Date(appt.createdAt || Date.now()).toLocaleString("en-GB", {
+                                day: "numeric",
+                                month: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                              })}
+                            </span>
                           </div>
                         </div>
 
-                        {appt.meetingLink ? (
-                          <div className="meeting-action-bar">
-                            <span className="meeting-url-text">Meeting URL: <code>{appt.meetingLink}</code></span>
-                            <a
-                              href={appt.meetingLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="client-meeting-join-btn"
+                        <div className="of-header-actions">
+                          {isPaid ? (
+                            <span className="of-paid-badge">✓ Paid (₹{feeVal})</span>
+                          ) : (
+                            <button
+                              className="of-pay-btn"
+                              onClick={() => handleOpenPaymentModal(appt)}
                             >
-                              🎥 Join Conference Call ➔
-                            </a>
-                          </div>
-                        ) : (
-                          <p className="no-link-text">Conference call link will be provided shortly by your advocate.</p>
+                              Pay Consultation Fee (₹{feeVal})
+                            </button>
+                          )}
+
+                          <button
+                            className="of-rate-btn"
+                            onClick={() => handleOpenRateModal(adv)}
+                          >
+                            Rate Advocate
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* ADVOCATE FEEDBACK TEXTAREA / REPLY BOX */}
+                      <div className="of-reply-text-box">
+                        <p>{appt.advocateNotes || appt.description || "piuytdfgh"}</p>
+                      </div>
+
+                      {/* REQUEST LIVE VIDEO CONSULTATION SUB-CONTAINER */}
+                      <div className="of-video-request-box">
+                        <label className="of-video-request-label">REQUEST LIVE VIDEO CONSULTATION</label>
+                        <div className="of-slot-row">
+                          <select
+                            className="of-slot-dropdown"
+                            value={chosenSlot}
+                            onChange={(e) =>
+                              setSelectedSlotsForAppt({
+                                ...selectedSlotsForAppt,
+                                [appt._id]: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">-- Choose an Available Slot --</option>
+                            {openSlots.map((s) => (
+                              <option key={s.slotId} value={s.slotId}>
+                                {s.date}, {s.startTime}
+                              </option>
+                            ))}
+                            {appt.appointmentDate && (
+                              <option value="current">
+                                {appt.appointmentDate}, {appt.appointmentTime || "10:10:00 pm"}
+                              </option>
+                            )}
+                          </select>
+
+                          <button
+                            className="of-book-video-btn"
+                            onClick={() => handleBookVideoSlot(appt, chosenSlot)}
+                          >
+                            Book Video Slot
+                          </button>
+                        </div>
+
+                        {/* JITSI CONFERENCE MEETING LINK - WORKABLE IF PAID, HIDDEN IF NOT */}
+                        {appt.meetingLink && (
+                          isPaid ? (
+                            <div className="of-meeting-link-banner">
+                              <span className="of-meeting-link-text">
+                                ✓ Video Meeting Link Unlocked: <code>{appt.meetingLink}</code>
+                              </span>
+                              <a
+                                href={appt.meetingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="of-join-jitsi-btn"
+                              >
+                                🎥 Join Conference Call ➔
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                              <div>
+                                <span className="fw-bold text-dark d-block">🔒 Video Consultation Call Link Hidden</span>
+                                <span className="small text-muted">
+                                  Advocate consultation fee of <strong>₹{feeVal}</strong> (set for this meeting time duration) must be paid to unlock your live video call link.
+                                </span>
+                              </div>
+                              <button
+                                className="btn btn-success fw-bold shadow-sm"
+                                onClick={() => handleOpenPaymentModal(appt)}
+                              >
+                                💳 Pay ₹{feeVal} to Unlock Call
+                              </button>
+                            </div>
+                          )
                         )}
                       </div>
-                    )}
-
-                    {appt.advocateNotes && (
-                      <div className="advocate-notes-box">
-                        <strong>📝 Advocate Notes &amp; Venue Instructions:</strong>
-                        <p>{appt.advocateNotes}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -963,6 +1137,64 @@ function ClientDashboard() {
           </div>
         </div>
       )}
+
+      {/* RATE ADVOCATE MODAL */}
+      {showRateModal && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h2>Rate Advocate {ratingAdvocate?.fullName || ratingAdvocate?.name}</h2>
+              <button className="modal-close" onClick={() => setShowRateModal(false)}>
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleRatingSubmit} className="modal-form">
+              <div className="input-group">
+                <label>Select Rating (1 to 5 Stars)</label>
+                <select
+                  value={ratingStars}
+                  onChange={(e) => setRatingStars(Number(e.target.value))}
+                >
+                  <option value={5}>⭐⭐⭐⭐⭐ (5/5 Excellent)</option>
+                  <option value={4}>⭐⭐⭐⭐ (4/5 Very Good)</option>
+                  <option value={3}>⭐⭐⭐ (3/5 Good)</option>
+                  <option value={2}>⭐⭐ (2/5 Average)</option>
+                  <option value={1}>⭐ (1/5 Poor)</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Your Review &amp; Experience</label>
+                <textarea
+                  rows="3"
+                  placeholder="Share your experience working with this advocate..."
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => setShowRateModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Submit Rating &amp; Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* PAYMENT GATEWAY MODAL */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        consultationData={paymentData}
+        onSuccess={handlePaymentSuccess}
+      />
 
       {/* FLOATING AI ASSISTANT TRIGGER BUTTON (FOR LOGGED IN CLIENTS ONLY) */}
       <button

@@ -85,6 +85,11 @@ function AdvocateDashboard() {
   });
   const [profileMessage, setProfileMessage] = useState("");
 
+  // Live Video Consultation Request & Reply State (Image 5)
+  const [rescheduleTimeMap, setRescheduleTimeMap] = useState({});
+  const [advocateReplyMap, setAdvocateReplyMap] = useState({});
+  const [advocateFeeMap, setAdvocateFeeMap] = useState({});
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) {
@@ -296,6 +301,63 @@ function AdvocateDashboard() {
       }
     } catch (err) {
       alert("Failed to reject appointment.");
+    }
+  };
+  // Approve Live Video Consultation Call & Set Jitsi Meeting Link (Image 5)
+  const handleApproveCall = async (appt) => {
+    const defaultTimeStr = `${new Date().toLocaleDateString("en-GB")} 04:40 PM`;
+    const confirmedTime = rescheduleTimeMap[appt._id] || `${appt.appointmentDate || new Date().toLocaleDateString("en-GB")} ${appt.appointmentTime || "04:40 PM"}`;
+    const meetingLink = appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`;
+    const replyNotes = advocateReplyMap[appt._id] || appt.advocateNotes || "";
+    const feeToSet = advocateFeeMap[appt._id] !== undefined && advocateFeeMap[appt._id] !== ""
+      ? Number(advocateFeeMap[appt._id])
+      : (appt.consultationFee !== undefined && appt.consultationFee !== null ? appt.consultationFee : (user?.consultationFee || 500));
+
+    try {
+      const payload = {
+        appointmentDate: confirmedTime.split(" ")[0] || appt.appointmentDate || new Date().toLocaleDateString("en-GB"),
+        appointmentTime: confirmedTime.split(" ").slice(1).join(" ") || appt.appointmentTime || "04:40 PM",
+        duration: appt.duration || 30,
+        consultationFee: feeToSet,
+        meetingLink: meetingLink,
+        advocateNotes: replyNotes,
+      };
+
+      const res = await assignSlot(appt._id, payload);
+      if (res.data.success) {
+        alert(`Live Video Consultation Request Approved! Fee set to ₹${feeToSet}. Meeting link generated.`);
+        fetchDashboardData(user.id || user._id);
+      }
+    } catch (err) {
+      alert("Failed to approve video consultation call.");
+    }
+  };
+
+  // Submit Official Advocate Reply (Image 5)
+  const handleSubmitAdvocateReply = async (appt) => {
+    const replyText = advocateReplyMap[appt._id];
+    if (!replyText || !replyText.trim()) {
+      alert("Please enter reply text for the client.");
+      return;
+    }
+
+    try {
+      const payload = {
+        appointmentDate: appt.appointmentDate || new Date().toLocaleDateString("en-GB"),
+        appointmentTime: appt.appointmentTime || "10:10:00 PM",
+        duration: appt.duration || 30,
+        consultationFee: appt.consultationFee !== undefined && appt.consultationFee !== null ? appt.consultationFee : (user?.consultationFee || 500),
+        meetingLink: appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`,
+        advocateNotes: replyText.trim(),
+      };
+
+      const res = await assignSlot(appt._id, payload);
+      if (res.data.success) {
+        alert("Official Advocate Consultation Reply Submitted Successfully!");
+        fetchDashboardData(user.id || user._id);
+      }
+    } catch (err) {
+      alert("Failed to submit advocate reply.");
     }
   };
 
@@ -958,124 +1020,128 @@ function AdvocateDashboard() {
               </div>
             )}
 
-            {/* CONSULTATION REQUESTS TAB */}
+            {/* CONSULTATION REQUESTS TAB - LIVE VIDEO CONSULTATION & OFFICIAL REPLY (Image 5 Design) */}
             {activeTab === "appointments" && (
               <div className="adv-section">
-                <div className="section-header-row">
-                  <h3 className="section-title">📋 Direct Consultation Requests</h3>
-                  <div className="filter-controls">
-                    <label>Filter Status:</label>
-                    <select
-                      className="adv-select"
-                      value={statusFilterAppt}
-                      onChange={(e) => setStatusFilterAppt(e.target.value)}
-                    >
-                      <option value="All">All Statuses</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Approved">Approved</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  </div>
+                <div className="img5-section-header">
+                  <span className="img5-blue-bar"></span>
+                  <h2>Live Video Consultation Requests</h2>
                 </div>
 
                 {filteredAppointments.length === 0 ? (
                   <div className="adv-empty-state">
-                    <h3>No Direct Consultation Requests Found</h3>
-                    <p>There are no appointment requests matching your filter.</p>
+                    <h3>No Video Consultation Requests Found</h3>
+                    <p>There are no live video consultation requests at the moment.</p>
                   </div>
                 ) : (
-                  <div className="adv-cards-grid">
-                    {filteredAppointments.map((appt) => (
-                      <div className="adv-item-card" key={appt._id}>
-                        <div className="adv-card-top">
-                          <div>
-                            <span className="category-tag">
-                              {appt.issue ? `Issue: ${appt.issue}` : "Legal Consultation"}
+                  <div className="img5-video-requests-list">
+                    {filteredAppointments.map((appt) => {
+                      const reqTime = appt.appointmentDate && appt.appointmentTime
+                        ? `${appt.appointmentDate}, ${appt.appointmentTime}`
+                        : "8/17/2026, 10:10:00 PM";
+                      const currentRescheduleVal = rescheduleTimeMap[appt._id] !== undefined
+                        ? rescheduleTimeMap[appt._id]
+                        : "17-08-2026 04:40 PM";
+
+                      return (
+                        <div className="img5-request-card" key={appt._id}>
+                          {/* TOP ROW: REQUESTED TIME & PENDING APPROVAL BADGE */}
+                          <div className="img5-card-top-row">
+                            <div className="img5-requested-time">
+                              <span className="img5-label">REQUESTED TIME:</span>
+                              <strong className="img5-time-val">{reqTime}</strong>
+                            </div>
+
+                            <span className={`img5-status-badge ${(appt.status || "Pending").toLowerCase()}`}>
+                              {appt.status === "Pending" ? "PENDING APPROVAL" : (appt.status || "PENDING").toUpperCase()}
                             </span>
-                            <h3 className="client-name">
-                              👤 {appt.client?.fullName || appt.client?.name || "Client"}
-                            </h3>
-                            <p className="client-contact">
-                              ✉ {appt.client?.email || "No email"} {appt.client?.phone ? `| 📞 ${appt.client.phone}` : ""}
-                            </p>
                           </div>
-                          <span
-                            className={`status-pill status-${(appt.status || "Pending")
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                          >
-                            {appt.status}
-                          </span>
-                        </div>
 
-                        <p className="adv-item-desc">
-                          <strong>Description:</strong> {appt.description || "No description provided."}
-                        </p>
-
-                        {/* SLOT DETAILS IF APPROVED */}
-                        {appt.status === "Approved" && (
-                          <div className="slot-info-box">
-                            <p><strong>📅 Date:</strong> {appt.appointmentDate || "TBD"}</p>
-                            <p><strong>⏰ Time:</strong> {appt.appointmentTime || "TBD"}</p>
-                            <p><strong>⏱ Duration:</strong> {appt.duration || 30} Mins</p>
-                            <p><strong>💵 Consultation Fee:</strong> {appt.consultationFee ? `₹${appt.consultationFee}` : "Not Specified"}</p>
-                            {appt.meetingLink && (
-                              <div className="meeting-link-row">
-                                <span>💬 <strong>Conference Link:</strong></span>
-                                <a
-                                  href={appt.meetingLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="call-link-btn"
-                                >
-                                  🎥 Join Conference Call ➔
-                                </a>
+                          {/* MIDDLE ROW: CONFIRM/RESCHEDULE MEETING TIME & SET FEE */}
+                          <div className="row g-2 mb-3">
+                            <div className="col-md-7">
+                              <label className="img5-input-label">CONFIRM/RESCHEDULE MEETING TIME *</label>
+                              <div className="img5-datetime-input-wrapper">
+                                <input
+                                  type="text"
+                                  className="img5-datetime-input"
+                                  value={currentRescheduleVal}
+                                  onChange={(e) =>
+                                    setRescheduleTimeMap({
+                                      ...rescheduleTimeMap,
+                                      [appt._id]: e.target.value,
+                                    })
+                                  }
+                                />
                               </div>
-                            )}
-                            {appt.advocateNotes && (
-                              <p><strong>📝 Notes:</strong> {appt.advocateNotes}</p>
-                            )}
+                            </div>
+
+                            <div className="col-md-5">
+                              <label className="img5-input-label">CONSULTATION FEE FOR THIS TIME (₹) *</label>
+                              <input
+                                type="number"
+                                className="img5-datetime-input"
+                                placeholder="500"
+                                value={advocateFeeMap[appt._id] !== undefined ? advocateFeeMap[appt._id] : (appt.consultationFee || user?.consultationFee || 500)}
+                                onChange={(e) =>
+                                  setAdvocateFeeMap({
+                                    ...advocateFeeMap,
+                                    [appt._id]: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
                           </div>
-                        )}
 
-                        <div className="adv-card-footer">
-                          {appt.status === "Pending" && (
-                            <div className="action-buttons-group">
+                          {/* ACTION BUTTONS ROW: APPROVE CALL & DECLINE REQUEST */}
+                          <div className="img5-actions-row">
+                            <button
+                              className="img5-approve-call-btn"
+                              onClick={() => handleApproveCall(appt)}
+                            >
+                              Approve Call
+                            </button>
+                            <button
+                              className="img5-decline-request-btn"
+                              onClick={() => handleRejectAppointment(appt._id)}
+                            >
+                              Decline Request
+                            </button>
+                          </div>
+
+                          {/* SECTION 2 BELOW: OFFICIAL ADVOCATE CONSULTATION REPLY */}
+                          <div className="img5-reply-subcontainer">
+                            <div className="img5-sub-header">
+                              <span className="img5-green-bar"></span>
+                              <h2>Official Advocate Consultation Reply</h2>
+                            </div>
+
+                            <div className="img5-reply-form">
+                              <textarea
+                                rows="3"
+                                className="img5-reply-textarea"
+                                placeholder="Type official advocate consultation reply or case advice for client..."
+                                value={advocateReplyMap[appt._id] !== undefined ? advocateReplyMap[appt._id] : (appt.advocateNotes || "")}
+                                onChange={(e) =>
+                                  setAdvocateReplyMap({
+                                    ...advocateReplyMap,
+                                    [appt._id]: e.target.value,
+                                  })
+                                }
+                              />
+
                               <button
-                                className="action-btn approve-btn"
-                                onClick={() => openSlotModal(appt)}
+                                type="button"
+                                className="img5-submit-reply-btn"
+                                onClick={() => handleSubmitAdvocateReply(appt)}
                               >
-                                ✓ Approve &amp; Confirm Allotment
-                              </button>
-                              <button
-                                className="action-btn reject-btn"
-                                onClick={() => handleRejectAppointment(appt._id)}
-                              >
-                                ✕ Reject
+                                Submit Advocate Reply &amp; Advice
                               </button>
                             </div>
-                          )}
-
-                          {appt.status === "Approved" && (
-                            <div className="action-buttons-group">
-                              <button
-                                className="action-btn complete-btn"
-                                onClick={() => handleCompleteAppointment(appt._id)}
-                              >
-                                🏆 Mark Consultation Completed
-                              </button>
-                              <button
-                                className="action-btn edit-slot-btn"
-                                onClick={() => openSlotModal(appt)}
-                              >
-                                ✏ Edit Allotment
-                              </button>
-                            </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -12,6 +12,7 @@ const complaintRoutes = require("./routes/complaintRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/payments", paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

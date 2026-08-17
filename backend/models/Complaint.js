@@ -95,6 +95,15 @@ const complaintSchema = new mongoose.Schema(
     advocateNotes: {
         type: String,
         default: ""
+    },
+
+    paymentStatus: {
+        type: String,
+        enum: [
+            "Pending",
+            "Paid"
+        ],
+        default: "Pending"
     }
 
 },

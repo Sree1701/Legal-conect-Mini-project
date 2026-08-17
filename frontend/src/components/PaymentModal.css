@@ -1,0 +1,334 @@
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(6, 11, 25, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.payment-modal-card {
+  background: #182238;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 480px;
+  padding: 32px 36px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(16, 185, 129, 0.1);
+  color: #ffffff;
+  font-family: inherit;
+  box-sizing: border-box;
+  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.payment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.gateway-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.gateway-title-with-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.active-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.gateway-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #94a3b8;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gateway-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.fee-summary-banner {
+  background: #111a2d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.fee-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #8fa0be;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.fee-amount {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.secure-badge {
+  background: rgba(88, 101, 242, 0.18);
+  color: #818cf8;
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.payment-error-alert {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  margin-bottom: 18px;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.payment-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-input-group label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #9aaecb;
+  text-transform: uppercase;
+}
+
+.payment-input-group input {
+  background: #121b2d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.payment-input-group input:focus {
+  border-color: #3b82f6;
+  background: #162238;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.payment-input-group input::placeholder {
+  color: #4b5d78;
+}
+
+.payment-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.payment-pay-btn {
+  background: #00ab66;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 171, 102, 0.3);
+}
+
+.payment-pay-btn:hover {
+  background: #009659;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 171, 102, 0.4);
+}
+
+.payment-pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* OTP STEP STYLES */
+.otp-step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 0 10px;
+}
+
+.shield-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: #252427;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shield-icon {
+  font-size: 2.2rem;
+}
+
+.otp-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: #ffffff;
+}
+
+.otp-subtext {
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+  max-width: 360px;
+}
+
+.otp-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.otp-input-box {
+  background: #121b2d;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 12px;
+  text-align: center;
+  color: #ffffff;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.otp-input-box:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* SUCCESS STEP STYLES */
+.success-step-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0 15px;
+}
+
+.success-checkmark-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  border: 2px solid #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.checkmark-icon {
+  font-size: 2.8rem;
+  color: #10b981;
+  font-weight: 800;
+}
+
+.success-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  color: #ffffff;
+}
+
+.success-subtext {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  margin: 0 0 28px 0;
+}
+
+.return-dashboard-btn {
+  background: #2c3a52;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.return-dashboard-btn:hover {
+  background: #394a67;
+  transform: translateY(-1px);
+}
