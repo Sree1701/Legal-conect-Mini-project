@@ -33,7 +33,7 @@ const resetDatabase = async () => {
       admin = new User({
         fullName: "System Admin",
         email: adminEmail,
-        password: hashedPassword,
+        password: "admin123",
         role: "admin",
         isVerified: true,
         advocateStatus: "Approved",
