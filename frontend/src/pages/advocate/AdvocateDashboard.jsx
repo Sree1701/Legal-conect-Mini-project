@@ -1036,25 +1036,61 @@ function AdvocateDashboard() {
                 ) : (
                   <div className="img5-video-requests-list">
                     {filteredAppointments.map((appt) => {
+                      const clientObj = appt.client || {};
+                      const clientName = clientObj.fullName || clientObj.name || "Client";
+                      const clientContact = clientObj.email || clientObj.phone ? `${clientObj.email || ""} ${clientObj.phone ? "• " + clientObj.phone : ""}` : "";
                       const reqTime = appt.appointmentDate && appt.appointmentTime
                         ? `${appt.appointmentDate}, ${appt.appointmentTime}`
-                        : "8/17/2026, 10:10:00 PM";
+                        : new Date(appt.createdAt || Date.now()).toLocaleDateString("en-GB") + ", 10:10:00 PM";
                       const currentRescheduleVal = rescheduleTimeMap[appt._id] !== undefined
                         ? rescheduleTimeMap[appt._id]
-                        : "17-08-2026 04:40 PM";
+                        : `${appt.appointmentDate || new Date().toLocaleDateString("en-GB")} ${appt.appointmentTime || "04:40 PM"}`;
+                      const isPaid = (appt.paymentStatus || "").toLowerCase() === "paid";
+                      const isApproved = appt.status === "Approved";
+                      const feeVal = appt.consultationFee || user?.consultationFee || 500;
 
                       return (
                         <div className="img5-request-card" key={appt._id}>
                           {/* TOP ROW: REQUESTED TIME & PENDING APPROVAL BADGE */}
                           <div className="img5-card-top-row">
                             <div className="img5-requested-time">
-                              <span className="img5-label">REQUESTED TIME:</span>
-                              <strong className="img5-time-val">{reqTime}</strong>
+                              <span className="img5-label">CLIENT NAME &amp; REQUESTED TIME:</span>
+                              <strong className="img5-time-val">👨‍💼 {clientName} ({reqTime})</strong>
+                              {clientContact && <div className="small text-muted mt-1">📧 {clientContact}</div>}
                             </div>
 
                             <span className={`img5-status-badge ${(appt.status || "Pending").toLowerCase()}`}>
                               {appt.status === "Pending" ? "PENDING APPROVAL" : (appt.status || "PENDING").toUpperCase()}
                             </span>
+                          </div>
+
+                          {/* ISSUE SUBJECT */}
+                          <div className="mb-3 p-2 rounded" style={{ backgroundColor: "rgba(255,255,255,0.05)", borderLeft: "3px solid #d4af37" }}>
+                            <span className="small text-muted fw-bold d-block">CONSULTATION SUBJECT:</span>
+                            <span className="fw-semibold">{appt.issue || "Live Video Consultation Request"}</span>
+                            {appt.description && <p className="small text-muted mb-0 mt-1">{appt.description}</p>}
+                          </div>
+
+                          {/* PAYMENT VERIFICATION STATUS BADGE FOR ADVOCATE */}
+                          <div className="mb-3">
+                            <label className="img5-input-label">CLIENT PAYMENT STATUS CHECK *</label>
+                            {isPaid ? (
+                              <div className="alert alert-success d-flex align-items-center justify-content-between p-2 mb-0 border-0 rounded-3" style={{ backgroundColor: "rgba(25, 135, 84, 0.15)", color: "#2eca8a" }}>
+                                <div>
+                                  <strong>✓ CLIENT PAYMENT VERIFIED &amp; COMPLETED</strong>
+                                  <span className="d-block small">Consultation Fee of ₹{feeVal} paid by client.</span>
+                                </div>
+                                <span className="badge bg-success px-3 py-2 fs-6 fw-bold">PAID (₹{feeVal})</span>
+                              </div>
+                            ) : (
+                              <div className="alert alert-warning d-flex align-items-center justify-content-between p-2 mb-0 border-0 rounded-3" style={{ backgroundColor: "rgba(255, 193, 7, 0.15)", color: "#ffc107" }}>
+                                <div>
+                                  <strong>⚠️ PAYMENT PENDING FROM CLIENT</strong>
+                                  <span className="d-block small">Client has not completed payment for consultation fee of ₹{feeVal} yet.</span>
+                                </div>
+                                <span className="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold">PAYMENT PENDING</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* MIDDLE ROW: CONFIRM/RESCHEDULE MEETING TIME & SET FEE */}
@@ -1082,7 +1118,7 @@ function AdvocateDashboard() {
                                 type="number"
                                 className="img5-datetime-input"
                                 placeholder="500"
-                                value={advocateFeeMap[appt._id] !== undefined ? advocateFeeMap[appt._id] : (appt.consultationFee || user?.consultationFee || 500)}
+                                value={advocateFeeMap[appt._id] !== undefined ? advocateFeeMap[appt._id] : feeVal}
                                 onChange={(e) =>
                                   setAdvocateFeeMap({
                                     ...advocateFeeMap,
@@ -1099,7 +1135,7 @@ function AdvocateDashboard() {
                               className="img5-approve-call-btn"
                               onClick={() => handleApproveCall(appt)}
                             >
-                              Approve Call
+                              {isApproved ? "✓ Call & Link Approved (Re-save)" : "Approve Call & Conference Link"}
                             </button>
                             <button
                               className="img5-decline-request-btn"
@@ -1109,11 +1145,31 @@ function AdvocateDashboard() {
                             </button>
                           </div>
 
+                          {/* ACTIVE CONFERENCE LINK BANNER IF APPROVED */}
+                          {isApproved && (
+                            <div className="mt-3 p-3 rounded-3" style={{ backgroundColor: "rgba(13, 110, 253, 0.15)", border: "1px solid rgba(13, 110, 253, 0.3)" }}>
+                              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                  <span className="fw-bold text-info d-block">🎥 Approved Conference Link Active:</span>
+                                  <code className="text-light small">{appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`}</code>
+                                </div>
+                                <a
+                                  href={appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-info btn-sm fw-bold shadow-sm"
+                                >
+                                  Host / Join Meeting ➔
+                                </a>
+                              </div>
+                            </div>
+                          )}
+
                           {/* SECTION 2 BELOW: OFFICIAL ADVOCATE CONSULTATION REPLY */}
                           <div className="img5-reply-subcontainer">
                             <div className="img5-sub-header">
                               <span className="img5-green-bar"></span>
-                              <h2>Official Advocate Consultation Reply</h2>
+                              <h2>Official Advocate Consultation Reply &amp; Advice</h2>
                             </div>
 
                             <div className="img5-reply-form">

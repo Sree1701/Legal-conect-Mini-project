@@ -361,7 +361,7 @@ function ClientDashboard() {
       fetchClientCases(clientId);
     }
 
-    setActiveTab("consultations");
+    setActiveTab("cases");
   };
 
   const handleOpenRateModal = (adv) => {
@@ -478,13 +478,13 @@ function ClientDashboard() {
             className={`tab-btn ${activeTab === "cases" ? "active" : ""}`}
             onClick={() => setActiveTab("cases")}
           >
-            📂 My Cases &amp; Documents ({cases.length})
+            📂 My Registered Legal Cases ({cases.length})
           </button>
           <button
-            className={`tab-btn ${activeTab === "consultations" ? "active" : ""}`}
-            onClick={() => setActiveTab("consultations")}
+            className={`tab-btn ${activeTab === "ai-assistant" ? "active" : ""}`}
+            onClick={() => setActiveTab("ai-assistant")}
           >
-            💬 Booked Consultations ({appointments.length})
+            🤖 AI Legal Assistant
           </button>
           
           <button
@@ -611,25 +611,12 @@ function ClientDashboard() {
                         </div>
                       </div>
 
-                      <div className="advocate-footer d-flex gap-2">
+                      <div className="advocate-footer">
                         <button
-                          className="select-advocate-btn flex-grow-1"
+                          className="select-advocate-btn w-100"
                           onClick={() => openNewCaseModal(adv)}
                         >
                           Book Consultation &amp; Send File ➔
-                        </button>
-                        <button
-                          className="btn btn-success fw-bold px-3 rounded-3"
-                          onClick={() => {
-                            setPaymentData({
-                              amount: adv.consultationFee || 500,
-                              advocateId: adv._id || adv.id,
-                              clientId: user?.id || user?._id,
-                            });
-                            setShowPaymentModal(true);
-                          }}
-                        >
-                          💳 Pay Fee (₹{adv.consultationFee || 500})
                         </button>
                       </div>
                     </div>
@@ -643,6 +630,11 @@ function ClientDashboard() {
         {/* TAB 2: MY REGISTERED CASES & DOCUMENTS */}
         {activeTab === "cases" && (
           <div className="tab-content">
+            <div className="official-feedbacks-section-header mb-4">
+              <span className="blue-bar-indicator"></span>
+              <h2>My Registered Legal Cases ({cases.length})</h2>
+            </div>
+
             {cases.length === 0 ? (
               <div className="empty-state">
                 <h3>No Cases Registered Yet</h3>
@@ -659,7 +651,7 @@ function ClientDashboard() {
             ) : (
               <div className="cases-list">
                 {cases.map((c) => (
-                  <div className="case-card" key={c._id}>
+                  <div className="case-card shadow-sm" key={c._id}>
                     <div className="case-card-header">
                       <div>
                         <span className="case-category-badge">{c.category}</span>
@@ -793,157 +785,7 @@ function ClientDashboard() {
           </div>
         )}
 
-        {/* TAB 3: OFFICIAL ADVOCATE FEEDBACKS & LIVE VIDEO CONSULTATION (Image 2 Design) */}
-        {activeTab === "consultations" && (
-          <div className="tab-content">
-            <div className="official-feedbacks-section-header">
-              <span className="blue-bar-indicator"></span>
-              <h2>Official Advocate Feedbacks</h2>
-            </div>
-
-            {appointments.length === 0 ? (
-              <div className="empty-state">
-                <h3>No Advocate Feedbacks Available</h3>
-                <p>When an advocate provides legal feedback on your consultation, it will appear here.</p>
-              </div>
-            ) : (
-              <div className="official-feedbacks-list">
-                {appointments.map((appt) => {
-                  const adv = appt.advocate || {};
-                  const advName = adv.fullName || adv.name || "Advocate";
-                  const advInitial = advName.charAt(0).toUpperCase();
-                  const isPaid = (appt.paymentStatus || "").toLowerCase() === "paid";
-                  const feeVal = appt.consultationFee || adv.consultationFee || 500;
-                  const openSlots = (adv.availableSlots || []).filter((s) => !s.isBooked);
-                  const chosenSlot = selectedSlotsForAppt[appt._id] || "";
-
-                  return (
-                    <div className="official-feedback-card-container" key={appt._id}>
-                      {/* CARD TOP HEADER ROW */}
-                      <div className="of-card-header">
-                        <div className="of-header-left">
-                          <div className="of-avatar-circle">{advInitial}</div>
-                          <div className="of-header-info">
-                            <div className="of-name-rating-line">
-                              <strong>Advocate {advName.replace(/^Advocate\s+/i, "")}</strong>
-                              <span className="of-rating-text">★ 0 (0 reviews)</span>
-                            </div>
-                            <span className="of-timestamp">
-                              {new Date(appt.createdAt || Date.now()).toLocaleString("en-GB", {
-                                day: "numeric",
-                                month: "numeric",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                                hour12: true,
-                              })}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="of-header-actions">
-                          {isPaid ? (
-                            <span className="of-paid-badge">✓ Paid (₹{feeVal})</span>
-                          ) : (
-                            <button
-                              className="of-pay-btn"
-                              onClick={() => handleOpenPaymentModal(appt)}
-                            >
-                              Pay Consultation Fee (₹{feeVal})
-                            </button>
-                          )}
-
-                          <button
-                            className="of-rate-btn"
-                            onClick={() => handleOpenRateModal(adv)}
-                          >
-                            Rate Advocate
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* ADVOCATE FEEDBACK TEXTAREA / REPLY BOX */}
-                      <div className="of-reply-text-box">
-                        <p>{appt.advocateNotes || appt.description || "piuytdfgh"}</p>
-                      </div>
-
-                      {/* REQUEST LIVE VIDEO CONSULTATION SUB-CONTAINER */}
-                      <div className="of-video-request-box">
-                        <label className="of-video-request-label">REQUEST LIVE VIDEO CONSULTATION</label>
-                        <div className="of-slot-row">
-                          <select
-                            className="of-slot-dropdown"
-                            value={chosenSlot}
-                            onChange={(e) =>
-                              setSelectedSlotsForAppt({
-                                ...selectedSlotsForAppt,
-                                [appt._id]: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="">-- Choose an Available Slot --</option>
-                            {openSlots.map((s) => (
-                              <option key={s.slotId} value={s.slotId}>
-                                {s.date}, {s.startTime}
-                              </option>
-                            ))}
-                            {appt.appointmentDate && (
-                              <option value="current">
-                                {appt.appointmentDate}, {appt.appointmentTime || "10:10:00 pm"}
-                              </option>
-                            )}
-                          </select>
-
-                          <button
-                            className="of-book-video-btn"
-                            onClick={() => handleBookVideoSlot(appt, chosenSlot)}
-                          >
-                            Book Video Slot
-                          </button>
-                        </div>
-
-                        {/* JITSI CONFERENCE MEETING LINK - WORKABLE IF PAID, HIDDEN IF NOT */}
-                        {isPaid ? (
-                          <div className="of-meeting-link-banner">
-                            <span className="of-meeting-link-text">
-                              ✓ Video Meeting Link Unlocked: <code>{appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`}</code>
-                            </span>
-                            <a
-                              href={appt.meetingLink || `https://meet.jit.si/LegalConnect-Consultation-${appt._id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="of-join-jitsi-btn"
-                            >
-                              🎥 Join Conference Call ➔
-                            </a>
-                          </div>
-                        ) : (
-                          <div className="alert alert-warning border border-warning rounded-3 p-3 my-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <div>
-                              <span className="fw-bold text-dark d-block">🔒 Video Consultation Call Link Hidden</span>
-                              <span className="small text-muted">
-                                Advocate consultation fee of <strong>₹{feeVal}</strong> (set for this meeting time duration) must be paid to unlock your live video call link.
-                              </span>
-                            </div>
-                            <button
-                              className="btn btn-success fw-bold shadow-sm"
-                              onClick={() => handleOpenPaymentModal(appt)}
-                            >
-                              💳 Pay ₹{feeVal} to Unlock Call
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 4: LEGAL AI CHAT ASSISTANT */}
+        {/* TAB 3: LEGAL AI CHAT ASSISTANT */}
         {activeTab === "ai-assistant" && (
           <div className="tab-content ai-tab-content">
             <AILegalAssistant onConsultAdvocate={handleConsultAdvocateFromAI} />

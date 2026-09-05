@@ -28,15 +28,14 @@ function Navbar() {
       </div>
 
       <nav className="nav-links">
-
         <Link to="/">Home</Link>
-
         <Link to="/login">User Login</Link>
-
         <Link to="/register">Register</Link>
-
         <Link to="/advocate-login" className="advocate-btn">
           Advocate Portal
+        </Link>
+        <Link to="/admin" className="admin-btn">
+          Admin Portal
         </Link>
       </nav>
 

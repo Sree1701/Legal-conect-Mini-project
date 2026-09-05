@@ -79,39 +79,23 @@ exports.getClientAppointments = async (req, res) => {
             : { client: clientId };
 
         const appointments = await Appointment.find(query)
-
-        .populate("advocate", "fullName email phone name")
-
+        .populate("advocate", "fullName email phone name specialization availableSlots consultationFee")
         .sort({
-
             createdAt: -1
-
         });
 
         res.json({
-
             success: true,
-
             appointments
-
         });
-
     }
-
     catch (error) {
-
         console.log(error);
-
         res.status(500).json({
-
             success: false,
-
             message: "Server Error"
-
         });
-
     }
-
 };
 
 
@@ -120,9 +104,7 @@ exports.getClientAppointments = async (req, res) => {
 // ===================================================
 
 exports.getAdvocateAppointments = async (req, res) => {
-
     try {
-
         const { advocateId } = req.params;
         if (!advocateId || advocateId === "undefined" || advocateId === "null") {
             return res.status(400).json({ success: false, message: "Valid Advocate ID is required" });
@@ -133,39 +115,23 @@ exports.getAdvocateAppointments = async (req, res) => {
             : { advocate: advocateId };
 
         const appointments = await Appointment.find(query)
-
         .populate("client", "fullName email phone name")
-
         .sort({
-
             createdAt: -1
-
         });
 
         res.json({
-
             success: true,
-
             appointments
-
         });
-
     }
-
     catch (error) {
-
         console.log(error);
-
         res.status(500).json({
-
             success: false,
-
             message: "Server Error"
-
         });
-
     }
-
 };
 
 
@@ -174,80 +140,63 @@ exports.getAdvocateAppointments = async (req, res) => {
 // ===================================================
 
 exports.assignSlot = async (req, res) => {
-
     try {
-
         const {
-
             appointmentDate,
             appointmentTime,
             duration,
             consultationFee,
             meetingLink,
             advocateNotes
-
         } = req.body;
 
         const appointment = await Appointment.findById(
-
             req.params.id
-
         );
 
         if (!appointment) {
-
             return res.status(404).json({
-
                 success: false,
-
                 message: "Appointment Not Found"
-
             });
-
         }
 
         appointment.status = "Approved";
 
-        appointment.appointmentDate = appointmentDate;
+        if (appointmentDate) appointment.appointmentDate = appointmentDate;
+        if (appointmentTime) appointment.appointmentTime = appointmentTime;
+        if (duration) appointment.duration = duration;
+        if (consultationFee !== undefined && consultationFee !== null) {
+            appointment.consultationFee = Number(consultationFee);
+        }
 
-        appointment.appointmentTime = appointmentTime;
+        if (meetingLink !== undefined && meetingLink !== "") {
+            appointment.meetingLink = meetingLink;
+        } else if (!appointment.meetingLink) {
+            appointment.meetingLink = `https://meet.jit.si/LegalConnect-Consultation-${appointment._id}`;
+        }
 
-        appointment.duration = duration;
-
-        appointment.consultationFee = consultationFee;
-
-        if (meetingLink !== undefined) appointment.meetingLink = meetingLink;
-
-        appointment.advocateNotes = advocateNotes;
+        if (advocateNotes !== undefined) appointment.advocateNotes = advocateNotes;
 
         await appointment.save();
 
+        const updatedAppointment = await Appointment.findById(appointment._id)
+            .populate("client", "fullName email phone name")
+            .populate("advocate", "fullName email phone name specialization");
+
         res.json({
-
             success: true,
-
-            message: "Appointment Approved",
-
-            appointment
-
+            message: "Appointment Approved & Video Conference Link Active",
+            appointment: updatedAppointment
         });
-
     }
-
     catch (error) {
-
         console.log(error);
-
         res.status(500).json({
-
             success: false,
-
-            message: "Server Error"
-
+            message: "Server Error: " + error.message
         });
-
     }
-
 };
 
 
