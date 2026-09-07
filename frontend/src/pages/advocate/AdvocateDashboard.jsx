@@ -901,13 +901,20 @@ function AdvocateDashboard() {
                               👤 Client: <strong>{c.user?.fullName || c.user?.name || "Client"}</strong> ({c.user?.email || "No Email"} {c.user?.phone ? `| 📞 ${c.user.phone}` : ""})
                             </p>
                           </div>
-                          <span
-                            className={`status-badge status-${(c.status || "Assigned")
-                              .toLowerCase()
-                              .replace(/\s+/g, "-")}`}
-                          >
-                            {c.status}
-                          </span>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <span
+                              className={`status-badge status-${(c.status || "Assigned")
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
+                            >
+                              {c.status}
+                            </span>
+                            <span
+                              className={`status-badge ${(c.paymentStatus || "").toLowerCase() === "paid" ? "status-resolved" : "status-rejected"}`}
+                            >
+                              💳 Payment: {(c.paymentStatus || "").toLowerCase() === "paid" ? "Paid" : "Unpaid"}
+                            </span>
+                          </div>
                         </div>
 
                         <p className="case-description">{c.description}</p>
@@ -931,6 +938,7 @@ function AdvocateDashboard() {
                                 <span>⏰ <strong>Time:</strong> {c.hearingTime || "TBD"}</span>
                                 <span>⏱ <strong>Duration:</strong> {c.duration || 30} Mins</span>
                                 <span>💵 <strong>Fee:</strong> {c.consultationFee ? `₹${c.consultationFee}` : "Not Specified"}</span>
+                                <span>💳 <strong>Payment:</strong> {(c.paymentStatus || "").toLowerCase() === "paid" ? "Paid" : "Unpaid"}</span>
                               </div>
 
                               {c.meetingLink && (
@@ -1287,7 +1295,7 @@ function AdvocateDashboard() {
             </div>
 
             <p className="modal-subtitle">
-              Case: <strong>{selectedCaseForSlot.title}</strong> | Client: {selectedCaseForSlot.user?.fullName || selectedCaseForSlot.user?.name}
+              Case: <strong>{selectedCaseForSlot.title}</strong> | Client: {selectedCaseForSlot.user?.fullName || selectedCaseForSlot.user?.name} | Payment: <strong>{(selectedCaseForSlot.paymentStatus || "").toLowerCase() === "paid" ? "Paid" : "Unpaid"}</strong>
             </p>
 
             <form onSubmit={handleSaveCaseSlotSubmit} className="modal-form">

@@ -11,7 +11,6 @@ function Home() {
       {/* HERO SECTION */}
       <section className="hero">
         <div className="overlay">
-          <span className="hero-badge">⚖ INDIA'S PREMIER DIGITAL LEGAL PORTAL</span>
           <h1>LegalConnect Portal</h1>
           <h2>
             Empowering Citizens with Verified Legal Experts &amp; Instant Video Consultations
@@ -41,32 +40,6 @@ function Home() {
                 👨‍⚖ Advocate Portal
               </button>
             </Link>
-
-            <Link to="/admin">
-              <button className="admin-access-btn">
-                🛡 Admin Panel
-              </button>
-            </Link>
-          </div>
-
-          {/* HERO STATS BAR */}
-          <div className="hero-stats-row mt-5">
-            <div className="hero-stat-item">
-              <span className="stat-num">500+</span>
-              <span className="stat-desc">Verified Advocates</span>
-            </div>
-            <div className="hero-stat-item">
-              <span className="stat-num">10,000+</span>
-              <span className="stat-desc">Cases &amp; Hearings</span>
-            </div>
-            <div className="hero-stat-item">
-              <span className="stat-num">100%</span>
-              <span className="stat-desc">Secure Video Calls</span>
-            </div>
-            <div className="hero-stat-item">
-              <span className="stat-num">24/7</span>
-              <span className="stat-desc">AI Legal Support</span>
-            </div>
           </div>
         </div>
       </section>
