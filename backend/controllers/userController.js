@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const User = require("../models/User");
 
 // Get All Advocates with calculated Experience
@@ -119,6 +120,50 @@ exports.getAdvocateSlots = async (req, res) => {
     }
 };
 
+// Time parsing & formatting helpers
+const parseMinutes = (timeStr) => {
+    if (!timeStr) return 540; // 9 AM default
+    const clean = String(timeStr).trim().toUpperCase();
+
+    // Match formats: "10:30PM", "10:30 PM", "10:30:00", "22:30", "10 PM", "9AM", etc.
+    const match = clean.match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*(AM|PM)?$/);
+    if (!match) return 540;
+
+    let hours = parseInt(match[1], 10);
+    let minutes = match[2] ? parseInt(match[2], 10) : 0;
+    const modifier = match[3];
+
+    if (modifier === "PM" && hours < 12) hours += 12;
+    if (modifier === "AM" && hours === 12) hours = 0;
+
+    if (isNaN(hours)) hours = 9;
+    if (isNaN(minutes)) minutes = 0;
+
+    return hours * 60 + minutes;
+};
+
+const formatTimeFromMinutes = (totalMin) => {
+    let hours = Math.floor(totalMin / 60);
+    let minutes = totalMin % 60;
+    let modifier = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} ${modifier}`;
+};
+
+const normalizeTimeString = (timeStr) => {
+    if (!timeStr) return "";
+    return formatTimeFromMinutes(parseMinutes(timeStr));
+};
+
+const generateUniqueSlotId = () => {
+    try {
+        return new mongoose.Types.ObjectId().toHexString();
+    } catch (e) {
+        return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+    }
+};
+
 // Add Single Preferred Slot
 exports.addAdvocateSlot = async (req, res) => {
     try {
@@ -134,16 +179,33 @@ exports.addAdvocateSlot = async (req, res) => {
             return res.status(404).json({ success: false, message: "Advocate account not found" });
         }
 
+        const cleanStart = normalizeTimeString(startTime);
+        const cleanEnd = normalizeTimeString(endTime);
+        const startMin = parseMinutes(startTime);
+        const endMin = parseMinutes(endTime);
+
+        if (endMin <= startMin) {
+            return res.status(400).json({ success: false, message: "End time must be after start time." });
+        }
+
         const calculatedFee = (fee !== undefined && fee !== "" && fee !== null) 
             ? Number(fee) 
             : (advocate.consultationFee !== undefined && advocate.consultationFee !== null ? advocate.consultationFee : null);
 
+        // Check if slot for same date and start time already exists
+        const exists = advocate.availableSlots.some(
+            (s) => s.date === date && normalizeTimeString(s.startTime) === cleanStart
+        );
+        if (exists) {
+            return res.status(400).json({ success: false, message: `A consultation slot for ${date} at ${cleanStart} already exists.` });
+        }
+
         const newSlot = {
-            slotId: new require("mongoose").Types.ObjectId().toString(),
+            slotId: generateUniqueSlotId(),
             date,
-            startTime,
-            endTime,
-            duration: Number(duration) || 30,
+            startTime: cleanStart,
+            endTime: cleanEnd,
+            duration: Number(duration) || (endMin - startMin) || 30,
             fee: calculatedFee,
             isBooked: false,
         };
@@ -181,42 +243,27 @@ exports.autoGenerateSlots = async (req, res) => {
             ? Number(fee) 
             : (advocate.consultationFee !== undefined && advocate.consultationFee !== null ? advocate.consultationFee : null);
 
-        // Standard time parsing helper (e.g. "09:00 AM" to minutes)
-        const parseMinutes = (timeStr) => {
-            if (!timeStr) return 540; // 9 AM default
-            let [time, modifier] = timeStr.trim().split(" ");
-            let [hours, minutes] = time.split(":").map(Number);
-            if (modifier && modifier.toUpperCase() === "PM" && hours < 12) hours += 12;
-            if (modifier && modifier.toUpperCase() === "AM" && hours === 12) hours = 0;
-            return hours * 60 + minutes;
-        };
-
-        const formatTime = (totalMin) => {
-            let hours = Math.floor(totalMin / 60);
-            let minutes = totalMin % 60;
-            let modifier = hours >= 12 ? "PM" : "AM";
-            hours = hours % 12;
-            if (hours === 0) hours = 12;
-            return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} ${modifier}`;
-        };
-
         const startMin = parseMinutes(startTime || advocate.workingHours?.startTime || "09:00 AM");
         const endMin = parseMinutes(endTime || advocate.workingHours?.endTime || "05:00 PM");
+
+        if (endMin <= startMin) {
+            return res.status(400).json({ success: false, message: "Day End Time must be after Day Start Time." });
+        }
 
         const generated = [];
         let curr = startMin;
         while (curr + duration <= endMin) {
-            const slotStart = formatTime(curr);
-            const slotEnd = formatTime(curr + duration);
+            const slotStart = formatTimeFromMinutes(curr);
+            const slotEnd = formatTimeFromMinutes(curr + duration);
 
             // Check if already exists for this date and startTime
             const exists = advocate.availableSlots.some(
-                (s) => s.date === date && s.startTime === slotStart
+                (s) => s.date === date && normalizeTimeString(s.startTime) === slotStart
             );
 
             if (!exists) {
                 generated.push({
-                    slotId: new require("mongoose").Types.ObjectId().toString(),
+                    slotId: generateUniqueSlotId(),
                     date,
                     startTime: slotStart,
                     endTime: slotEnd,
@@ -227,6 +274,13 @@ exports.autoGenerateSlots = async (req, res) => {
             }
 
             curr += duration;
+        }
+
+        if (generated.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No new slots were generated. Slots for this date and time range may already exist.",
+            });
         }
 
         advocate.availableSlots.push(...generated);

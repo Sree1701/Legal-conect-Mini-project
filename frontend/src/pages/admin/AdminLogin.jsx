@@ -20,8 +20,15 @@ function AdminLogin() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    const cleanEmail = (email || "").trim();
+    if (!cleanEmail || !password) {
       setError("Please enter administrator email and password.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@gmail\.com$/i;
+    if (!emailRegex.test(cleanEmail)) {
+      setError("Email address must contain '@', 'gmail', '.', and 'com' (e.g. admin@gmail.com).");
       return;
     }
 
@@ -98,7 +105,7 @@ function AdminLogin() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="auth-form">
+          <form onSubmit={handleLogin} className="auth-form" noValidate>
             <div className="input-group">
               <label htmlFor="email">Admin Email Address</label>
               <div className="input-wrapper">
@@ -110,7 +117,7 @@ function AdminLogin() {
                     setEmail(e.target.value);
                     if (error) setError("");
                   }}
-                  placeholder="Enter admin email address"
+                  placeholder="admin@gmail.com"
                   required
                 />
                 <svg className="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -118,6 +125,22 @@ function AdminLogin() {
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
               </div>
+              {email && (
+                <div className="email-live-hints" style={{ marginTop: "6px", fontSize: "12px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ color: email.includes("@") ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {email.includes("@") ? "✓" : "✗"} '@'
+                  </span>
+                  <span style={{ color: email.toLowerCase().includes("gmail") ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {email.toLowerCase().includes("gmail") ? "✓" : "✗"} 'gmail'
+                  </span>
+                  <span style={{ color: email.includes(".") ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {email.includes(".") ? "✓" : "✗"} '.'
+                  </span>
+                  <span style={{ color: (email.toLowerCase().endsWith("com") || email.toLowerCase().includes(".com")) ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {(email.toLowerCase().endsWith("com") || email.toLowerCase().includes(".com")) ? "✓" : "✗"} 'com'
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="input-group">

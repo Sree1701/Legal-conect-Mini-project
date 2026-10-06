@@ -6,18 +6,29 @@ const Appointment = require("../models/Appointment");
 // ===================================================
 
 exports.bookAppointment = async (req, res) => {
-
     try {
-
         const {
-
             client,
             advocate,
             issue,
             description,
             consultationFee
-
         } = req.body;
+
+        if (!client || !advocate || !issue) {
+            return res.status(400).json({
+                success: false,
+                message: "Client ID, Advocate ID, and Issue subject are required."
+            });
+        }
+
+        const cleanIssue = issue.trim();
+        if (cleanIssue.length < 3) {
+            return res.status(400).json({
+                success: false,
+                message: "Issue title must be at least 3 characters long."
+            });
+        }
 
         const User = require("../models/User");
         const advocateUser = await User.findById(advocate);
@@ -26,13 +37,11 @@ exports.bookAppointment = async (req, res) => {
             : (advocateUser?.consultationFee ?? null);
 
         const appointment = new Appointment({
-
             client,
             advocate,
-            issue,
-            description,
+            issue: cleanIssue,
+            description: (description || "").trim(),
             consultationFee: feeToSet
-
         });
 
         await appointment.save();

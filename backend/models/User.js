@@ -14,6 +14,13 @@ const userSchema = new mongoose.Schema(
         unique: true,
         lowercase: true,
         trim: true,
+        validate: {
+            validator: function (v) {
+                if (!v) return false;
+                return /^[^\s@]+@gmail\.com$/i.test(v);
+            },
+            message: "Email address must be a valid email containing '@', 'gmail', and '.com' (e.g. user@gmail.com)",
+        },
     },
 
     password: {
@@ -24,6 +31,13 @@ const userSchema = new mongoose.Schema(
     phone: {
         type: String,
         default: "",
+        validate: {
+            validator: function (v) {
+                if (!v) return true;
+                return /^[0-9]{10}$/.test(v);
+            },
+            message: "Phone number must be exactly 10 digits containing only numbers.",
+        },
     },
 
     role: {
@@ -88,7 +102,11 @@ const userSchema = new mongoose.Schema(
             slotId: {
                 type: String,
                 default: function () {
-                    return new mongoose.Types.ObjectId().toString();
+                    try {
+                        return new mongoose.Types.ObjectId().toString();
+                    } catch (e) {
+                        return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+                    }
                 },
             },
             date: {

@@ -214,8 +214,21 @@ function ClientDashboard() {
 
   const handleCaseSubmit = async (e) => {
     e.preventDefault();
-    if (!caseForm.title || !caseForm.description) {
-      setMessage("Please fill in case title and description.");
+    const cleanTitle = (caseForm.title || "").trim();
+    const cleanDescription = (caseForm.description || "").trim();
+
+    if (!cleanTitle || !cleanDescription) {
+      setMessage("Please fill in case subject title and details description.");
+      return;
+    }
+
+    if (cleanTitle.length < 3) {
+      setMessage("Case Subject / Title must be at least 3 characters long.");
+      return;
+    }
+
+    if (cleanDescription.length < 10) {
+      setMessage("Case Details & Description must be at least 10 characters long to provide adequate context.");
       return;
     }
 
@@ -229,9 +242,9 @@ function ClientDashboard() {
       const payload = {
         user: clientId,
         advocate: advId,
-        title: caseForm.title,
-        category: caseForm.category,
-        description: caseForm.description,
+        title: cleanTitle,
+        category: caseForm.category || "Civil",
+        description: cleanDescription,
         documents: documents,
       };
 
@@ -443,7 +456,7 @@ function ClientDashboard() {
       {/* DASHBOARD HERO BANNER */}
       <section className="dashboard-banner">
         <div className="banner-content">
-          <h1>Find Verified Advocates &amp; Book Consultation Slots</h1>
+          <h1>Find Verified Advocates & Book Consultation Slots</h1>
           <p>
             Browse top legal professionals, view their consultation fees and available dates/times,
             book consultation slots, and join online video conference calls directly.
@@ -519,7 +532,7 @@ function ClientDashboard() {
                   <option value="Civil">Civil Law</option>
                   <option value="Criminal">Criminal Law</option>
                   <option value="Family">Family Law</option>
-                  <option value="Property">Property &amp; Real Estate</option>
+                  <option value="Property">Property & Real Estate</option>
                   <option value="Consumer">Consumer Protection</option>
                   <option value="Cyber">Cyber Law</option>
                 </select>
@@ -589,7 +602,7 @@ function ClientDashboard() {
                         <div className="available-slots-preview">
                           <strong>📅 Available Consultation Slots ({openSlots.length}):</strong>
                           {openSlots.length === 0 ? (
-                            <p className="no-slots-avail-text">No pre-set slots. You can still request a custom date &amp; time upon booking.</p>
+                            <p className="no-slots-avail-text">No pre-set slots. You can still request a custom date & time upon booking.</p>
                           ) : (
                             <div className="slots-chip-list">
                               {openSlots.slice(0, 4).map((s) => (
@@ -616,7 +629,7 @@ function ClientDashboard() {
                           className="select-advocate-btn w-100"
                           onClick={() => openNewCaseModal(adv)}
                         >
-                          Book Consultation &amp; Send File ➔
+                          Book Consultation & Send File ➔
                         </button>
                       </div>
                     </div>
@@ -687,7 +700,7 @@ function ClientDashboard() {
                         <div className="meeting-header">
                           <span className="meeting-icon">📅</span>
                           <div>
-                            <h4>Scheduled Case Hearing &amp; Consultation Slot</h4>
+                            <h4>Scheduled Case Hearing & Consultation Slot</h4>
                             <p>
                               <strong>Date:</strong> {c.hearingDate || "TBD"} @ <strong>Time:</strong> {c.hearingTime || "TBD"} ({c.duration || 30} Mins | Fee: {c.consultationFee ? `₹${c.consultationFee}` : "Not Specified"})
                             </p>
@@ -733,7 +746,7 @@ function ClientDashboard() {
 
                         {c.advocateNotes && (
                           <div className="advocate-notes-box">
-                            <strong>📝 Advocate Notes &amp; Court Instructions:</strong>
+                            <strong>📝 Advocate Notes & Court Instructions:</strong>
                             <p>{c.advocateNotes}</p>
                           </div>
                         )}
@@ -743,7 +756,7 @@ function ClientDashboard() {
                     {/* UPLOADED DOCUMENTS SECTION */}
                     <div className="documents-section">
                       <div className="documents-header">
-                        <h4>📄 Documents &amp; Files Sent ({c.documents?.length || 0})</h4>
+                        <h4>📄 Documents & Files Sent ({c.documents?.length || 0})</h4>
                         <button
                           className="upload-doc-btn"
                           onClick={() => setSelectedCaseForUpload(c)}
@@ -798,7 +811,7 @@ function ClientDashboard() {
         <div className="modal-overlay">
           <div className="modal-card">
             <div className="modal-header">
-              <h2>Register New Case &amp; Book Consultation Slot</h2>
+              <h2>Register New Case & Book Consultation Slot</h2>
               <button className="modal-close" onClick={() => setShowCaseModal(false)}>
                 ✕
               </button>
@@ -876,7 +889,7 @@ function ClientDashboard() {
                 <label>Case Subject / Title *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Property Dispute &amp; Ownership Verification"
+                  placeholder="e.g. Property Dispute & Ownership Verification"
                   value={caseForm.title}
                   onChange={(e) => setCaseForm({ ...caseForm, title: e.target.value })}
                   required
@@ -900,7 +913,7 @@ function ClientDashboard() {
               </div>
 
               <div className="input-group">
-                <label>Case Details &amp; Description *</label>
+                <label>Case Details & Description *</label>
                 <textarea
                   rows="4"
                   placeholder="Describe your legal concern, facts, and what assistance you require..."
@@ -957,7 +970,7 @@ function ClientDashboard() {
                   className="submit-btn"
                   disabled={submitting}
                 >
-                  {submitting ? "Submitting Case..." : "Submit Case &amp; Book Consultation"}
+                  {submitting ? "Submitting Case..." : "Submit Case & Book Consultation"}
                 </button>
               </div>
             </form>
@@ -1005,7 +1018,7 @@ function ClientDashboard() {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  Upload &amp; Send File
+                  Upload & Send File
                 </button>
               </div>
             </form>
@@ -1038,7 +1051,7 @@ function ClientDashboard() {
                 </select>
               </div>
               <div className="input-group">
-                <label>Your Review &amp; Experience</label>
+                <label>Your Review & Experience</label>
                 <textarea
                   rows="3"
                   placeholder="Share your experience working with this advocate..."
@@ -1055,7 +1068,7 @@ function ClientDashboard() {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  Submit Rating &amp; Review
+                  Submit Rating & Review
                 </button>
               </div>
             </form>

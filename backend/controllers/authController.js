@@ -61,32 +61,87 @@ exports.register = async (req, res) => {
             enrollmentYear,
         } = req.body;
 
-        const userName = fullName || name;
+        const userName = (fullName || name || "").trim();
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const cleanPhone = (phone || "").trim();
 
-        if (!userName || !email || !password) {
+        if (!userName || !cleanEmail || !cleanPhone || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Please fill in all required fields.",
+                message: "Please fill in all required fields (Full Name, Email, Phone Number, Password).",
             });
         }
 
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (userName.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: "Full Name must be at least 2 characters long.",
+            });
+        }
+
+        // Email Format Validation Regex (Must contain @, gmail, ., and com)
+        const emailRegex = /^[^\s@]+@gmail\.com$/i;
+        if (!emailRegex.test(cleanEmail)) {
+            return res.status(400).json({
+                success: false,
+                message: "Email address must contain '@', 'gmail', '.', and 'com' (e.g. user@gmail.com).",
+            });
+        }
+
+        // Phone Format Validation (Exactly 10 digits, numbers only)
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(cleanPhone)) {
+            return res.status(400).json({
+                success: false,
+                message: "Phone number must be exactly 10 digits containing only numbers.",
+            });
+        }
+
+        // Password Strength Validation
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters long.",
+            });
+        }
+
+        const existingUser = await User.findOne({ email: cleanEmail });
 
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: "An account with this email already exists.",
+                message: "An account with this email address already exists.",
             });
         }
 
         const userRole = role || "client";
 
         // Advocate registration validation
+        let cleanBarId = "";
+        let parsedYear = null;
+
         if (userRole === "advocate") {
-            if (!barCouncilId || !enrollmentYear) {
+            cleanBarId = (barCouncilId || "").trim();
+            if (!cleanBarId || !enrollmentYear) {
                 return res.status(400).json({
                     success: false,
                     message: "Bar Council ID and Year of Enrollment are required for advocate registration.",
+                });
+            }
+
+            if (cleanBarId.length < 3) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid Bar Council ID (min 3 characters).",
+                });
+            }
+
+            const currentYear = new Date().getFullYear();
+            parsedYear = parseInt(enrollmentYear, 10);
+            if (isNaN(parsedYear) || parsedYear < 1950 || parsedYear > currentYear) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Please enter a valid Year of Enrollment between 1950 and ${currentYear}.`,
                 });
             }
         }
@@ -95,12 +150,12 @@ exports.register = async (req, res) => {
 
         const newUser = new User({
             fullName: userName,
-            email: email.toLowerCase(),
+            email: cleanEmail,
             password: hashedPassword,
-            phone: phone || "",
+            phone: cleanPhone,
             role: userRole,
-            barCouncilId: userRole === "advocate" ? barCouncilId : "",
-            enrollmentYear: userRole === "advocate" ? parseInt(enrollmentYear, 10) : null,
+            barCouncilId: userRole === "advocate" ? cleanBarId : "",
+            enrollmentYear: userRole === "advocate" ? parsedYear : null,
             advocateStatus: userRole === "advocate" ? "Pending Verification" : "Approved",
         });
 
@@ -136,6 +191,15 @@ exports.login = async (req, res) => {
         }
 
         const cleanEmail = email.toLowerCase().trim();
+
+        // Email Format Validation Regex (Must contain @, gmail, ., and com)
+        const emailRegex = /^[^\s@]+@gmail\.com$/i;
+        if (!emailRegex.test(cleanEmail)) {
+            return res.status(400).json({
+                success: false,
+                message: "Email address must contain '@', 'gmail', '.', and 'com' (e.g. user@gmail.com).",
+            });
+        }
         const user = await User.findOne({ email: cleanEmail });
 
         if (!user) {

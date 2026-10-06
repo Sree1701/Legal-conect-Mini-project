@@ -670,11 +670,11 @@ function AdvocateDashboard() {
                   </div>
                 )}
 
-                <div className="adv-slot-management-grid">
-                  {/* FORM 1: ADD SINGLE SLOT */}
+                <div className="adv-slot-single-container" style={{ maxWidth: "650px", margin: "0 auto 35px" }}>
+                  {/* SINGLE STREAMLINED SLOT CREATION FORM */}
                   <div className="slot-form-card">
-                    <h4>+ Add Single Consultation Slot</h4>
-                    <p className="form-subtext">Add a specific date and time window when you are free.</p>
+                    <h4>+ Add Consultation Slot</h4>
+                    <p className="form-subtext">Add a specific date and time window when you are free for client consultations.</p>
 
                     <form onSubmit={handleAddSingleSlot} className="slot-inner-form">
                       <div className="input-group">
@@ -733,74 +733,7 @@ function AdvocateDashboard() {
                       </div>
 
                       <button type="submit" className="add-slot-submit-btn">
-                        + Add Custom Slot
-                      </button>
-                    </form>
-                  </div>
-
-                  {/* FORM 2: AUTO GENERATE DAILY SLOTS */}
-                  <div className="slot-form-card">
-                    <h4>⚡ Auto-Generate Daily Slots</h4>
-                    <p className="form-subtext">Generate back-to-back consultation slots for an entire working day.</p>
-
-                    <form onSubmit={handleAutoGenerateSlots} className="slot-inner-form">
-                      <div className="input-group">
-                        <label>Select Date *</label>
-                        <input
-                          type="date"
-                          value={autoGenForm.date}
-                          onChange={(e) => setAutoGenForm({ ...autoGenForm, date: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div className="input-group-row">
-                        <div className="input-group">
-                          <label>Day Start Time</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 09:00 AM"
-                            value={autoGenForm.startTime}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, startTime: e.target.value })}
-                            required
-                          />
-                        </div>
-
-                        <div className="input-group">
-                          <label>Day End Time</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. 05:00 PM"
-                            value={autoGenForm.endTime}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, endTime: e.target.value })}
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="input-group-row">
-                        <div className="input-group">
-                          <label>Slot Duration (Mins)</label>
-                          <input
-                            type="number"
-                            value={autoGenForm.slotDuration}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, slotDuration: e.target.value })}
-                          />
-                        </div>
-
-                        <div className="input-group">
-                          <label>Fee per Slot (₹)</label>
-                          <input
-                            type="number"
-                            placeholder={user?.consultationFee ? `Default: ₹${user.consultationFee}` : "Set fee per slot"}
-                            value={autoGenForm.fee}
-                            onChange={(e) => setAutoGenForm({ ...autoGenForm, fee: e.target.value })}
-                          />
-                        </div>
-                      </div>
-
-                      <button type="submit" className="add-slot-submit-btn gold-btn">
-                        ⚡ Generate Full Day Slots
+                        + Add Consultation Slot
                       </button>
                     </form>
                   </div>

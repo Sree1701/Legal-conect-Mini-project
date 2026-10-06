@@ -6,13 +6,48 @@ exports.createComplaint = async (req, res) => {
     try {
         const { user, advocate, title, description, category, documents } = req.body;
 
+        const userId = user || req.user?.id;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required to register a case."
+            });
+        }
+
+        const cleanTitle = (title || "").trim();
+        const cleanDescription = (description || "").trim();
+
+        if (!cleanTitle || !cleanDescription) {
+            return res.status(400).json({
+                success: false,
+                message: "Case title and description are required."
+            });
+        }
+
+        if (cleanTitle.length < 3) {
+            return res.status(400).json({
+                success: false,
+                message: "Case title must be at least 3 characters long."
+            });
+        }
+
+        if (cleanDescription.length < 10) {
+            return res.status(400).json({
+                success: false,
+                message: "Case description must be at least 10 characters long."
+            });
+        }
+
+        const validCategories = ["Civil", "Criminal", "Family", "Property", "Consumer", "Cyber", "Other"];
+        const cleanCategory = validCategories.includes(category) ? category : "Other";
+
         const complaint = await Complaint.create({
-            user: user || req.user?.id,
+            user: userId,
             advocate: advocate || null,
-            title,
-            description,
-            category: category || "Other",
-            documents: documents || [],
+            title: cleanTitle,
+            description: cleanDescription,
+            category: cleanCategory,
+            documents: Array.isArray(documents) ? documents : [],
             status: advocate ? "Assigned" : "Pending"
         });
 

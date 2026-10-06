@@ -25,24 +25,59 @@ function Register() {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    if (name === "phone") {
+      const cleanValue = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prev) => ({
+        ...prev,
+        phone: cleanValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
     if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.email || !formData.password) {
-      setError("Please fill in all required fields.");
+    const cleanName = formData.name.trim();
+    const cleanEmail = formData.email.trim();
+    const cleanPhone = formData.phone.trim();
+
+    if (!cleanName || !cleanEmail || !cleanPhone || !formData.password) {
+      setError("Please fill in all required fields (Full Name, Email, Phone Number, Password).");
+      return;
+    }
+
+    if (cleanName.length < 2) {
+      setError("Full Name must be at least 2 characters long.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@gmail\.com$/i;
+    if (!emailRegex.test(cleanEmail)) {
+      setError("Email address must contain '@', 'gmail', '.', and 'com' (e.g. name@gmail.com).");
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(cleanPhone)) {
+      setError("Phone number must be exactly 10 digits containing only numbers.");
       return;
     }
 
     if (formData.role === "advocate") {
-      if (!formData.barCouncilId || !formData.enrollmentYear) {
+      const cleanBarId = formData.barCouncilId.trim();
+      if (!cleanBarId || !formData.enrollmentYear) {
         setError("Bar Council ID and Year of Enrollment are required for advocates.");
+        return;
+      }
+      if (cleanBarId.length < 3) {
+        setError("Bar Council ID must be at least 3 characters long.");
         return;
       }
       const currentYear = new Date().getFullYear();
@@ -53,13 +88,13 @@ function Register() {
       }
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match!");
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long (letters, numbers, uppercase, lowercase, & symbols allowed).");
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match!");
       return;
     }
 
@@ -135,7 +170,7 @@ function Register() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={handleSubmit} className="auth-form" noValidate>
             <div className="input-group">
               <label htmlFor="name">Full Name *</label>
               <div className="input-wrapper">
@@ -164,7 +199,7 @@ function Register() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter your email"
+                  placeholder="name@gmail.com"
                   required
                 />
                 <svg className="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -172,10 +207,26 @@ function Register() {
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
               </div>
+              {formData.email && (
+                <div className="email-live-hints" style={{ marginTop: "6px", fontSize: "12px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ color: formData.email.includes("@") ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {formData.email.includes("@") ? "✓" : "✗"} '@'
+                  </span>
+                  <span style={{ color: formData.email.toLowerCase().includes("gmail") ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {formData.email.toLowerCase().includes("gmail") ? "✓" : "✗"} 'gmail'
+                  </span>
+                  <span style={{ color: formData.email.includes(".") ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {formData.email.includes(".") ? "✓" : "✗"} '.'
+                  </span>
+                  <span style={{ color: (formData.email.toLowerCase().endsWith("com") || formData.email.toLowerCase().includes(".com")) ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+                    {(formData.email.toLowerCase().endsWith("com") || formData.email.toLowerCase().includes(".com")) ? "✓" : "✗"} 'com'
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="input-group">
-              <label htmlFor="phone">Phone Number</label>
+              <label htmlFor="phone">Phone Number *</label>
               <div className="input-wrapper">
                 <input
                   id="phone"
@@ -183,7 +234,10 @@ function Register() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="Enter your phone number"
+                  placeholder="Enter 10-digit phone number"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
+                  required
                 />
                 <svg className="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
@@ -270,6 +324,7 @@ function Register() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter password (min 6 chars)"
+                  minLength={6}
                   required
                 />
                 <svg className="input-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
