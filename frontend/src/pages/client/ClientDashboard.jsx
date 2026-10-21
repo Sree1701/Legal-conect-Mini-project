@@ -47,70 +47,6 @@ function ClientDashboard() {
   // Selected Slots tracking map per appointment
   const [selectedSlotsForAppt, setSelectedSlotsForAppt] = useState({});
 
-  // Legal AI Assistant State
-  const [aiChatMessages, setAiChatMessages] = useState([
-    {
-      id: 1,
-      sender: "ai",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      category: "Legal AI Advisor",
-      summary: "Welcome! I am LegalConnect AI Legal Assistant. Ask me any question regarding Indian Law, Consumer Rights, Property Disputes, Matrimonial Matters, Criminal Procedure, or Cyber Fraud.",
-      keyPoints: [
-        "Select a quick prompt suggestion below or type your detailed legal scenario.",
-        "Get applicable legal statutes, procedural steps, and necessary documents.",
-        "Directly connect with & book verified advocates on LegalConnect for formal court representation."
-      ],
-      disclaimer: "LegalConnect AI provides general legal information. It does not replace formal legal counsel by a licensed advocate.",
-    }
-  ]);
-  const [aiQuestionInput, setAiQuestionInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [copiedId, setCopiedId] = useState(null);
-
-  const handleAskAI = async (questionText = null) => {
-    const textToSend = questionText || aiQuestionInput;
-    if (!textToSend || !textToSend.trim() || aiLoading) return;
-
-    const userMsg = {
-      id: Date.now(),
-      sender: "user",
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: textToSend.trim()
-    };
-
-    setAiChatMessages(prev => [...prev, userMsg]);
-    if (!questionText) setAiQuestionInput("");
-    setAiLoading(true);
-
-    try {
-      const res = await api.post("/ai/chat", {
-        question: textToSend.trim(),
-        conversationHistory: aiChatMessages
-      });
-
-      if (res.data.success) {
-        setAiChatMessages(prev => [...prev, res.data.data]);
-      } else {
-        throw new Error(res.data.message || "Failed to get AI answer");
-      }
-    } catch (err) {
-      console.error("AI Error:", err);
-      setAiChatMessages(prev => [
-        ...prev,
-        {
-          id: Date.now() + 1,
-          sender: "ai",
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          category: "System Response",
-          summary: "Sorry, I encountered an issue generating the legal answer. Please try again or rephrase your question.",
-          disclaimer: "You can also consult verified advocates directly on LegalConnect.",
-        }
-      ]);
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
   const handleConsultAdvocateFromAI = (specialization) => {
     if (specialization) {
       setCategoryFilter(specialization);
@@ -118,12 +54,6 @@ function ClientDashboard() {
     setActiveTab("advocates");
   };
 
-  const copyAIText = (msg, id) => {
-    const text = `${msg.category || 'Legal AI Answer'}\n\nSummary:\n${msg.summary || ''}\n\nKey Points:\n${msg.keyPoints?.join('\n') || ''}\n\nProcedure:\n${msg.procedureSteps?.join('\n') || ''}`;
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
