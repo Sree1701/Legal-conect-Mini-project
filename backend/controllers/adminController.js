@@ -157,7 +157,6 @@ exports.getLoginLogs = async (req, res) => {
         const logs = await LoginLog.find()
             .populate("user", "fullName email role")
             .sort({ createdAt: -1 })
-            .limit(100)
             .lean();
 
         res.status(200).json({

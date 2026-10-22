@@ -249,7 +249,7 @@ function AdminDashboard() {
             className={`admin-tab-btn ${activeTab === "logs" ? "active" : ""}`}
             onClick={() => setActiveTab("logs")}
           >
-            🔒 View Login Information ({loginLogs.length})
+            🔒 View Login Information ({stats.totalLogins || loginLogs.length})
           </button>
         </div>
 
